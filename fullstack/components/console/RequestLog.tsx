@@ -12,7 +12,7 @@ interface RequestLogProps {
   onClear: () => void;
 }
 
-/** Latency of every call so far, oldest first — the shape of the session at a glance. */
+/** Latency of every call so far, oldest first  -  the shape of the session at a glance. */
 function Sparkline({ values }: { values: number[] }) {
   if (values.length < 4) return null;
 
@@ -75,7 +75,7 @@ export function RequestLog({ history, selectedId, onSelect, onReplay, onClear }:
     >
       {history.length === 0 ? (
         <p className="px-4 py-8 text-center text-[12.5px]" style={{ color: "var(--ink-muted)" }}>
-          Every call this session — yours and the scenario runner&apos;s — is recorded here, replayable.
+          Every call this session  -  yours and the scenario runner&apos;s  -  is recorded here, replayable.
         </p>
       ) : (
         <ul className="scroll-thin max-h-[320px] overflow-y-auto">

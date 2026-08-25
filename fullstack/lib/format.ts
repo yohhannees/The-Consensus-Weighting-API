@@ -43,7 +43,7 @@ export function formatDuration(ms: number): string {
   return `${(ms / 1000).toFixed(2)} s`;
 }
 
-/** Signed relative change between two weights, e.g. +18.4% — null when there is no baseline. */
+/** Signed relative change between two weights, e.g. +18.4%  -  null when there is no baseline. */
 export function percentDelta(next: number, previous: number): number | null {
   if (previous === 0) return null;
   return ((next - previous) / previous) * 100;

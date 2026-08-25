@@ -60,7 +60,7 @@ export function RequestPanel({ draft, inFlight, onSend, status }: RequestPanelPr
       {/*
         noValidate: without it the browser's native min={0} constraint on the amount
         field silently blocks submission (a native tooltip, no submit event at all) for
-        a negative value — so the API's own validation-error path, which this console
+        a negative value  -  so the API's own validation-error path, which this console
         exists to show, would never run for that case.
       */}
       <form onSubmit={handleSubmit} noValidate className="flex flex-col">
@@ -80,6 +80,7 @@ export function RequestPanel({ draft, inFlight, onSend, status }: RequestPanelPr
                 ]}
               />
               <div className="flex items-center gap-1.5">
+                <SampleSelect onLoad={(body) => draft.loadBody(body)} />
                 <QuickAction label="+10 backers" onClick={() => draft.appendCrowd(10, 100)} />
                 <QuickAction label="+100 backers" onClick={() => draft.appendCrowd(100, 100)} />
                 <QuickAction label="Clear" onClick={draft.clearRows} />
@@ -164,7 +165,7 @@ export function RequestPanel({ draft, inFlight, onSend, status }: RequestPanelPr
             ) : (
               <div className="flex flex-col gap-2 px-4 py-3">
                 <label className="text-[11px] font-medium uppercase tracking-[0.06em]" style={{ color: "var(--ink-muted)" }}>
-                  Body — sent exactly as typed
+                  Body  -  sent exactly as typed
                 </label>
                 <textarea
                   aria-label="Raw JSON body"
@@ -177,8 +178,8 @@ export function RequestPanel({ draft, inFlight, onSend, status }: RequestPanelPr
                 />
                 <p className="text-[12px]" style={{ color: draft.parseError ? "var(--critical)" : "var(--ink-muted)" }}>
                   {draft.parseError
-                    ? `Invalid JSON — ${draft.parseError}. It will still be sent, so you can see the API reject it.`
-                    : "Malformed JSON is allowed here on purpose — the API's error path is part of the contract."}
+                    ? `Invalid JSON  -  ${draft.parseError}. It will still be sent, so you can see the API reject it.`
+                    : "Malformed JSON is allowed here on purpose  -  the API's error path is part of the contract."}
                 </p>
               </div>
             )}
@@ -216,7 +217,7 @@ export function RequestPanel({ draft, inFlight, onSend, status }: RequestPanelPr
                 </div>
               ) : (
                 <span className="text-[12px]" style={{ color: "var(--ink-muted)" }}>
-                  Off — a retry of this exact request would count twice.
+                  Off  -  a retry of this exact request would count twice.
                 </span>
               )}
             </div>
@@ -225,7 +226,7 @@ export function RequestPanel({ draft, inFlight, onSend, status }: RequestPanelPr
           <div className="px-4 py-6 text-[13px]" style={{ color: "var(--ink-secondary)" }}>
             <p>
               <span className="mono">GET</span> takes no body. It recomputes every weight from the full
-              allocation table and returns the ranking — no cache, no write.
+              allocation table and returns the ranking  -  no cache, no write.
             </p>
           </div>
         )}
@@ -319,5 +320,61 @@ function QuickAction({ label, onClick }: { label: string; onClick: () => void })
     >
       {label}
     </button>
+  );
+}
+
+const SAMPLE_REQUESTS = {
+  crowd: JSON.stringify(
+    [
+      { userId: "alice", targetId: "community-garden", amount: 250 },
+      { userId: "ben", targetId: "community-garden", amount: 250 },
+      { userId: "chris", targetId: "community-garden", amount: 250 },
+      { userId: "dana", targetId: "community-garden", amount: 250 },
+      { userId: "whale", targetId: "new-library", amount: 1000 },
+    ],
+    null,
+    2,
+  ),
+  balanced: JSON.stringify(
+    [
+      { userId: "user_1", targetId: "target-a", amount: 100 },
+      { userId: "user_2", targetId: "target-a", amount: 100 },
+      { userId: "user_3", targetId: "target-b", amount: 300 },
+    ],
+    null,
+    2,
+  ),
+  invalid: JSON.stringify(
+    [{ userId: "demo-user", targetId: "demo-target", amount: -50 }],
+    null,
+    2,
+  ),
+} as const;
+
+function SampleSelect({ onLoad }: { onLoad: (body: string) => void }) {
+  return (
+    <label className="flex items-center gap-1.5" title="Load an example request into the editor">
+      <span className="sr-only">Load sample request</span>
+      <select
+        aria-label="Load sample request"
+        defaultValue=""
+        onChange={(event) => {
+          const key = event.target.value as keyof typeof SAMPLE_REQUESTS;
+          if (key) onLoad(SAMPLE_REQUESTS[key]);
+          event.currentTarget.value = "";
+        }}
+        className="rounded-lg px-2 py-1 text-[11.5px] font-medium outline-none"
+        style={{
+          background: "var(--accent-wash)",
+          border: "1px solid var(--accent-track)",
+          color: "var(--accent)",
+        }}
+      >
+        <option value="">Load sample</option>
+        <option value="crowd">Crowd vs whale</option>
+        <option value="balanced">Balanced targets</option>
+        <option value="invalid">Validation error</option>
+      </select>
+    </label>
   );
 }

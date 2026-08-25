@@ -23,7 +23,7 @@ import { useScenarioRunner } from "@/components/console/useScenarioRunner";
 /** How long a row stays highlighted after a call moved it. */
 const FLASH_MS = 1800;
 /**
- * Server data is re-fetched after writes, but a scenario run fires dozens of them —
+ * Server data is re-fetched after writes, but a scenario run fires dozens of them  -
  * coalescing keeps that to one round trip per burst instead of one per call.
  */
 const REFRESH_DEBOUNCE_MS = 900;
@@ -53,14 +53,14 @@ export function Dashboard({ initial }: DashboardProps) {
   });
 
   // The authoritative "weights before this call", read synchronously inside the
-  // call handler — state would still hold the previous render's value there.
+  // call handler  -  state would still hold the previous render's value there.
   const weightsRef = useRef<TargetWeight[]>(initial.weights);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Server-rendered data wins whenever it arrives (initial load and every
   // router.refresh()), because it is computed from the database rather than
-  // inferred from one response body. Adjusting state during render — rather than
-  // in an effect — is React's own pattern for "a prop changed, derived state must
+  // inferred from one response body. Adjusting state during render  -  rather than
+  // in an effect  -  is React's own pattern for "a prop changed, derived state must
   // follow": it re-renders before anything paints, with no intermediate frame.
   const [syncedFrom, setSyncedFrom] = useState(initial);
   if (syncedFrom !== initial) {
@@ -90,7 +90,7 @@ export function Dashboard({ initial }: DashboardProps) {
     refreshTimer.current = setTimeout(() => router.refresh(), REFRESH_DEBOUNCE_MS);
   }, [router]);
 
-  /** Single funnel for every call the page makes — manual sends and scenario steps alike. */
+  /** Single funnel for every call the page makes  -  manual sends and scenario steps alike. */
   const recordCall = useCallback(
     (result: ApiCallResult) => {
       setHistory((current) => [result, ...current].slice(0, MAX_HISTORY));
@@ -141,7 +141,7 @@ export function Dashboard({ initial }: DashboardProps) {
     setInFlight(null);
 
     if (result.networkError) {
-      setStatus({ tone: "critical", text: `Could not reach the API — ${result.networkError}` });
+      setStatus({ tone: "critical", text: `Could not reach the API  -  ${result.networkError}` });
       return;
     }
     if (result.ok) {
@@ -149,8 +149,8 @@ export function Dashboard({ initial }: DashboardProps) {
         tone: "success",
         text:
           draft.method === "POST"
-            ? "Submitted — the leaderboard has been updated."
-            : `Weights refreshed — ${formatInteger(weightsFromBody(result.body)?.length ?? 0)} targets in ${formatDuration(result.latencyMs)}.`,
+            ? "Submitted  -  the leaderboard has been updated."
+            : `Weights refreshed  -  ${formatInteger(weightsFromBody(result.body)?.length ?? 0)} targets in ${formatDuration(result.latencyMs)}.`,
       });
       return;
     }
@@ -158,7 +158,7 @@ export function Dashboard({ initial }: DashboardProps) {
     const body = result.body as { error?: string; message?: string } | undefined;
     setStatus({
       tone: result.status >= 500 ? "critical" : "warning",
-      text: `${result.status} ${body?.error ?? "Error"} — ${body?.message ?? "the API rejected this request"}`,
+      text: `${result.status} ${body?.error ?? "Error"}  -  ${body?.message ?? "the API rejected this request"}`,
     });
   }, [draft, recordCall]);
 
@@ -190,40 +190,31 @@ export function Dashboard({ initial }: DashboardProps) {
       : "idle";
 
   return (
-    <div className="mx-auto flex max-w-[1400px] flex-col gap-5 px-4 py-8 sm:px-6 lg:py-10">
-      <header className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-col gap-2">
-            <div className="flex items-center gap-2.5">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ background: "var(--accent)" }} />
-              <h1
-                className="text-[13px] font-semibold uppercase tracking-[0.14em]"
-                style={{ color: "var(--ink-muted)" }}
-              >
-                Consensus Weighting · live console
-              </h1>
+    <main className="dashboard-shell mx-auto flex max-w-[1440px] flex-col gap-6 px-4 py-5 sm:px-8 lg:gap-7 lg:py-8">
+      <header className="dashboard-hero">
+        <div className="dashboard-hero-glow" aria-hidden="true" />
+        <div className="relative flex flex-col gap-7 p-6 sm:p-8 lg:flex-row lg:items-end lg:justify-between lg:p-10">
+          <div className="max-w-3xl">
+            <div className="dashboard-kicker">
+              <span className="dashboard-kicker-mark" />
+              <span>Consensus Weighting</span>
+              <span className="dashboard-kicker-divider" />
+              <span className="dashboard-kicker-muted">Live workspace</span>
             </div>
-            <p
-              className="max-w-3xl text-[22px] font-semibold leading-snug"
-              style={{ color: "var(--ink-primary)" }}
-            >
-              Broad, distributed support outweighs a single large contribution of the same size.
+            <h1 className="dashboard-title">Make collective support count.</h1>
+            <p className="dashboard-subtitle">
+              Compare how much money a target raised with how broadly people supported it. The consensus score
+              rewards many independent contributors without letting one person game the result by splitting a gift.
             </p>
-            <p className="max-w-3xl text-[13.5px]" style={{ color: "var(--ink-secondary)" }}>
-              Each target&apos;s weight is <code className="mono tabular">(Σ√userTotal)²</code> — contributions
-              from the same user to the same target are summed first, so splitting one contribution into many
-              never helps. Build a request below and watch the exact bytes go out and come back, or run the
-              scenario suite to have the API prove it to you.
-            </p>
+            <div className="mt-5 flex flex-wrap items-center gap-2.5">
+              <span className="dashboard-formula mono">(Σ√userTotal)²</span>
+              <span className="dashboard-formula-note">broad support becomes visible in the ranking</span>
+            </div>
           </div>
 
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <div className="relative flex shrink-0 flex-wrap items-center gap-2">
             <HealthBadge />
-            <label
-              className="flex items-center gap-2 rounded-full px-2.5 py-1 text-[12px]"
-              style={{ background: "var(--surface)", border: "1px solid var(--ring)", color: "var(--ink-secondary)" }}
-              title="Poll GET /api/allocations/weights every 10 seconds"
-            >
+            <label className="dashboard-toggle" title="Poll GET /api/allocations/weights every 10 seconds">
               <input
                 type="checkbox"
                 checked={autoRefresh}
@@ -242,7 +233,7 @@ export function Dashboard({ initial }: DashboardProps) {
         <StatTile label="Raw capital" value={rawCapitalFromWeights} format={(v) => `$${formatCompact(v)}`} />
         <StatTile
           label="Top target"
-          value={topTarget ? topTarget.targetId : "—"}
+          value={topTarget ? topTarget.targetId : " - "}
           sublabel={topTarget ? `${formatCompact(topTarget.weight)} weight` : undefined}
         />
         <StatTile
@@ -252,13 +243,13 @@ export function Dashboard({ initial }: DashboardProps) {
         />
         <StatTile
           label="Scenarios passed"
-          value={runner.summary.ran === 0 ? "—" : `${runner.summary.passed}/${runner.summary.ran}`}
+          value={runner.summary.ran === 0 ? " - " : `${runner.summary.passed}/${runner.summary.ran}`}
           sublabel={runner.summary.failed > 0 ? `${runner.summary.failed} failing` : "of those run"}
           tone={runner.summary.ran > 0 && runner.summary.failed === 0 ? "accent" : "default"}
         />
       </section>
 
-      <section className="flex flex-col gap-3 lg:flex-row lg:items-stretch">
+      <section className="workspace-grid">
         <div className="min-w-0 flex-1">
           <RequestPanel draft={draft} inFlight={inFlight !== null} onSend={() => void send()} status={status} />
         </div>
@@ -292,7 +283,7 @@ export function Dashboard({ initial }: DashboardProps) {
         }}
       />
 
-      <section className="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_420px]">
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_420px]">
         <RequestLog
           history={history}
           selectedId={selectedId}
@@ -330,16 +321,16 @@ export function Dashboard({ initial }: DashboardProps) {
           </div>
         </Panel>
       </section>
-    </div>
+    </main>
   );
 }
 
-const SHAPE_EXAMPLE = `// request — POST body
+const SHAPE_EXAMPLE = `// request  -  POST body
 [
   { "userId": "user_1", "targetId": "A", "amount": 10000 }
 ]
 
-// response — 200
+// response  -  200
 [
   {
     "targetId": "A",
@@ -349,7 +340,7 @@ const SHAPE_EXAMPLE = `// request — POST body
   }
 ]
 
-// response — 400 / 409 / 429 / 500
+// response  -  400 / 409 / 429 / 500
 {
   "error": "ValidationError",
   "message": "amount must be a non-negative number",

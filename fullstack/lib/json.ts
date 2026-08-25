@@ -17,7 +17,7 @@ const TOKEN_PATTERN =
  * Tokenizes a single line of pretty-printed JSON for syntax highlighting.
  *
  * Line-at-a-time is safe here because `JSON.stringify` never emits a raw newline
- * inside a string literal (it escapes them), so no token can straddle two lines —
+ * inside a string literal (it escapes them), so no token can straddle two lines  -
  * which means the console can highlight a 10,000-row body one visible line at a
  * time instead of tokenizing the whole megabyte up front.
  */
@@ -63,7 +63,7 @@ export function prettyJson(value: unknown): string {
   }
 }
 
-/** Byte length as the network sees it — `String.length` undercounts non-ASCII ids. */
+/** Byte length as the network sees it  -  `String.length` undercounts non-ASCII ids. */
 export function byteLength(text: string): number {
   return new TextEncoder().encode(text).length;
 }

@@ -6,7 +6,7 @@ export type ScenarioGroup = "mechanism" | "validation" | "protocol" | "load";
 export interface ScenarioStep {
   label: string;
   method: "GET" | "POST";
-  /** Raw request body — a string so a step can send input the API must reject. */
+  /** Raw request body  -  a string so a step can send input the API must reject. */
   body?: string;
   idempotencyKey?: string;
   /** Status(es) the API contract says this step must answer with. */
@@ -27,7 +27,7 @@ export interface StepOutcome {
 
 export interface CheckResult {
   ok: boolean;
-  /** Always shown — the observed numbers, whether the check passed or failed. */
+  /** Always shown  -  the observed numbers, whether the check passed or failed. */
   message: string;
 }
 
@@ -87,7 +87,7 @@ export const scenarios: Scenario[] = [
     group: "mechanism",
     title: "Crowd beats whale",
     summary: "$10,000 from 1 user vs $10,000 from 100 users, in one batch",
-    detail: "Identical raw totals must not produce identical weight — distributed support wins by ~100x.",
+    detail: "Identical raw totals must not produce identical weight  -  distributed support wins by ~100x.",
     build: ({ nonce }) => {
       const whale = LAB_PREFIX + "whale_" + nonce;
       const crowd = LAB_PREFIX + "crowd_" + nonce;
@@ -121,7 +121,7 @@ export const scenarios: Scenario[] = [
           n(crowd.weight) +
           " vs " +
           n(whale.weight) +
-          " — " +
+          "  -  " +
           ratio.toFixed(1) +
           "x (spec floor: 2x)",
       };
@@ -160,7 +160,7 @@ export const scenarios: Scenario[] = [
           n(target.weight) +
           " on $" +
           n(target.rawTotal) +
-          " raw — " +
+          " raw  -  " +
           multiplier.toFixed(2) +
           "x (no gain)",
       };
@@ -241,7 +241,7 @@ export const scenarios: Scenario[] = [
           n(target.weight) +
           " on $" +
           n(target.rawTotal) +
-          " — padding merged, not counted twice",
+          "  -  padding merged, not counted twice",
       };
     },
   },
@@ -270,7 +270,7 @@ export const scenarios: Scenario[] = [
       return {
         ok: !present,
         message: present
-          ? "the $0 target appeared in the weights — it should have been dropped"
+          ? "the $0 target appeared in the weights  -  it should have been dropped"
           : "accepted with 200 and correctly absent from the ranked weights",
       };
     },
@@ -280,7 +280,7 @@ export const scenarios: Scenario[] = [
     group: "mechanism",
     title: "Cents survive the round trip",
     summary: "$0.01 and $1,234.56 through Decimal(18,2) storage",
-    detail: "Two-decimal amounts are stored and returned exactly — the raw total must match what was sent.",
+    detail: "Two-decimal amounts are stored and returned exactly  -  the raw total must match what was sent.",
     build: ({ nonce }) => {
       const target = LAB_PREFIX + "cents_" + nonce;
       return [
@@ -310,7 +310,7 @@ export const scenarios: Scenario[] = [
     group: "validation",
     title: "Negative amount",
     summary: "amount: -50",
-    detail: "A negative contribution would produce NaN under the square root — rejected at the boundary.",
+    detail: "A negative contribution would produce NaN under the square root  -  rejected at the boundary.",
     build: ({ nonce }) => [
       {
         label: "POST a negative amount",
@@ -390,7 +390,7 @@ export const scenarios: Scenario[] = [
     title: "Three decimal places",
     summary: "amount: 10.555",
     detail:
-      "Storage is Decimal(18,2). Anything finer would be silently rounded on insert, so the raw total would stop matching the request — rejected instead.",
+      "Storage is Decimal(18,2). Anything finer would be silently rounded on insert, so the raw total would stop matching the request  -  rejected instead.",
     build: ({ nonce }) => [
       {
         label: "POST a sub-cent amount",
@@ -432,7 +432,7 @@ export const scenarios: Scenario[] = [
     id: "reject-infinity",
     group: "validation",
     title: "Infinity through raw JSON",
-    summary: "amount: 1e999 — parses to Infinity",
+    summary: "amount: 1e999  -  parses to Infinity",
     detail:
       "1e999 is legal JSON that JSON.parse turns into Infinity. The schema's finiteness check is what stops it.",
     build: ({ nonce }) => [
@@ -505,7 +505,7 @@ export const scenarios: Scenario[] = [
       ]);
       return [
         { label: "First POST with Idempotency-Key", method: "POST", body, idempotencyKey: key, expectStatus: 200 },
-        { label: "Retry — identical key and body", method: "POST", body, idempotencyKey: key, expectStatus: 200 },
+        { label: "Retry  -  identical key and body", method: "POST", body, idempotencyKey: key, expectStatus: 200 },
       ];
     },
     check: (outcomes) => {
@@ -581,7 +581,7 @@ export const scenarios: Scenario[] = [
           n(first.rawTotal) +
           " → $" +
           n(second.rawTotal) +
-          " — counted twice, exactly as documented",
+          "  -  counted twice, exactly as documented",
       };
     },
   },
@@ -590,7 +590,7 @@ export const scenarios: Scenario[] = [
     group: "protocol",
     title: "GET changes nothing",
     summary: "Two consecutive reads of the weights",
-    detail: "Weights are derived on every read, never cached — but reading must not mutate anything either.",
+    detail: "Weights are derived on every read, never cached  -  but reading must not mutate anything either.",
     build: () => [
       { label: "GET weights", method: "GET", expectStatus: 200 },
       { label: "GET weights again", method: "GET", expectStatus: 200 },
@@ -641,7 +641,7 @@ export const scenarios: Scenario[] = [
           n(target.weight) +
           " on $" +
           n(target.rawTotal) +
-          " — " +
+          "  -  " +
           multiplier.toFixed(0) +
           "x",
       };
@@ -691,7 +691,7 @@ export const scenarios: Scenario[] = [
         ok: limited > 0,
         message: limited
           ? "first 429 at request #" + (firstLimited + 1) + "; " + limited + " of " + outcomes.length + " throttled"
-          : "no request was throttled — the limiter did not engage",
+          : "no request was throttled  -  the limiter did not engage",
       };
     },
   },

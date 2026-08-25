@@ -51,7 +51,7 @@ export function newIdempotencyKey(): string {
 /**
  * Performs one API call and records everything the console needs to *show* it:
  * both header sets, both raw bodies, byte counts, wall-clock latency, and the
- * status — including for failures, which are returned as results rather than
+ * status  -  including for failures, which are returned as results rather than
  * thrown, so a 400 or a dropped connection is inspectable exactly like a 200.
  */
 export async function callApi(spec: ApiCallSpec): Promise<ApiCallResult> {

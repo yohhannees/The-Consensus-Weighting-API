@@ -7,7 +7,7 @@ interface LeaderboardProps {
   weights: TargetWeight[];
   /** Weight per target as of the previous response, for the change column. */
   previous?: Map<string, number>;
-  /** Targets the most recent call moved — these rows flash once. */
+  /** Targets the most recent call moved  -  these rows flash once. */
   changed?: Set<string>;
 }
 
@@ -16,7 +16,7 @@ export function Leaderboard({ weights, previous, changed }: LeaderboardProps) {
     return (
       <div className="px-6 py-12 text-center">
         <p className="text-[14px]" style={{ color: "var(--ink-secondary)" }}>
-          No targets match. Submit a batch — or clear the filter — to see the ranking.
+          No targets match. Submit a batch  -  or clear the filter  -  to see the ranking.
         </p>
       </div>
     );
@@ -141,7 +141,7 @@ function Row({
       <Td className="text-right">
         {isNew ? (
           <span className="text-[12px]" style={{ color: "var(--ink-muted)" }}>
-            —
+             -
           </span>
         ) : delta === null || Math.abs(delta) < 0.05 ? (
           <span className="text-[12px]" style={{ color: "var(--ink-muted)" }}>

@@ -28,7 +28,7 @@ function tickLabel(power: number): string {
 
 interface WeightChartProps {
   weights: TargetWeight[];
-  /** Targets to draw with emphasis — the ones a call just moved. */
+  /** Targets to draw with emphasis  -  the ones a call just moved. */
   highlighted?: Set<string>;
 }
 
@@ -37,7 +37,7 @@ interface WeightChartProps {
  *
  * The diagonal is `weight = rawTotal`: exactly where a target lands when a single
  * contributor funds it, because (√total)² is the total. Every point *above* the line
- * is consensus, and its vertical distance from the line is the multiplier — which
+ * is consensus, and its vertical distance from the line is the multiplier  -  which
  * makes the chart a direct picture of the rule rather than a decoration on top of it.
  * Bubble area encodes contributor count, the input that does the lifting.
  */
@@ -127,7 +127,7 @@ export function WeightChart({ weights, highlighted }: WeightChartProps) {
           strokeDasharray="5 5"
         />
         {/* Weight can never fall below raw total, so the area under the line is
-            always empty — the safest place for the label. */}
+            always empty  -  the safest place for the label. */}
         <text
           x={PADDING.left + PLOT_WIDTH - 6}
           y={PADDING.top + PLOT_HEIGHT - 12}
@@ -175,7 +175,7 @@ export function WeightChart({ weights, highlighted }: WeightChartProps) {
 
       <div className="flex flex-wrap items-center gap-4 px-4 pb-3 text-[11.5px]" style={{ color: "var(--ink-muted)" }}>
         <LegendSwatch color="var(--accent)" label="consensus boost (many contributors)" />
-        <LegendSwatch color="var(--accent-2)" label="single contributor — sits on the line" />
+        <LegendSwatch color="var(--accent-2)" label="single contributor  -  sits on the line" />
         <span>bubble size = unique contributors</span>
       </div>
 

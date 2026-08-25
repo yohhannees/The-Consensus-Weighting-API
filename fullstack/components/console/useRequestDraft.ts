@@ -52,7 +52,7 @@ export interface RequestDraft {
   addRow: () => void;
   removeRow: (id: string) => void;
   duplicateRow: (id: string) => void;
-  /** Appends `count` distinct users all backing one target — the "crowd" shape. */
+  /** Appends `count` distinct users all backing one target  -  the "crowd" shape. */
   appendCrowd: (count: number, amount: number) => void;
   clearRows: () => void;
   rawText: string;

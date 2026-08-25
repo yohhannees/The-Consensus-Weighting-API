@@ -26,7 +26,7 @@ export function TransferWire({
   return (
     <div className="hidden w-16 shrink-0 flex-col items-center justify-center gap-2 py-8 lg:flex">
       <span className="mono tabular text-[10.5px]" style={{ color: "var(--ink-muted)" }}>
-        {requestBytes > 0 ? `↑ ${formatBytes(requestBytes)}` : "↑ —"}
+        {requestBytes > 0 ? `↑ ${formatBytes(requestBytes)}` : "↑  - "}
       </span>
 
       <svg width="64" height="120" viewBox="0 0 64 120" aria-hidden="true" className="overflow-visible">
@@ -54,7 +54,7 @@ export function TransferWire({
       </svg>
 
       <span className="mono tabular text-[10.5px]" style={{ color: "var(--ink-muted)" }}>
-        {responseBytes > 0 ? `↓ ${formatBytes(responseBytes)}` : "↓ —"}
+        {responseBytes > 0 ? `↓ ${formatBytes(responseBytes)}` : "↓  - "}
       </span>
     </div>
   );

@@ -10,7 +10,7 @@ export interface WeightDelta {
 
 /**
  * What one call actually did to the ranking. The response body alone can't show
- * this — it's the full recomputed leaderboard either way — so the console keeps
+ * this  -  it's the full recomputed leaderboard either way  -  so the console keeps
  * the previous body and diffs it, which is the only way a POST's effect (as
  * opposed to its result) is visible.
  */

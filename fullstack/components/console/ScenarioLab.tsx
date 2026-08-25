@@ -96,7 +96,7 @@ export function ScenarioLab({ runner, onInspect }: ScenarioLabProps) {
     >
       <div className="flex flex-col gap-3 px-4 py-3">
         <p className="max-w-[80ch] text-[12.5px]" style={{ color: "var(--ink-secondary)" }}>
-          Each scenario fires real requests at the running API and asserts on what comes back — status code,
+          Each scenario fires real requests at the running API and asserts on what comes back  -  status code,
           error discriminator, and the numbers themselves. Targets are generated per run under the{" "}
           <span className="mono">lab_</span> prefix, so a scenario proves its point on data no earlier run
           touched (and the leaderboard can filter it out).
@@ -285,7 +285,7 @@ function ScenarioCard({
               {run.steps.slice(0, 12).map((step, index) => (
                 <li key={index} className="flex items-center gap-2 text-[12px]">
                   <Badge tone={step.result ? statusTone(step.result.status) : "neutral"} mono>
-                    {step.result ? (step.result.status === 0 ? "ERR" : step.result.status) : "–"}
+                    {step.result ? (step.result.status === 0 ? "ERR" : step.result.status) : " - "}
                   </Badge>
                   <span className="min-w-0 flex-1 truncate" style={{ color: "var(--ink-secondary)" }}>
                     {step.label}
@@ -324,14 +324,14 @@ function ScenarioCard({
   );
 }
 
-/** One tick per step — readable whether a scenario has two steps or a hundred. */
+/** One tick per step  -  readable whether a scenario has two steps or a hundred. */
 function StepStrip({ steps }: { steps: StepRun[] }) {
   return (
     <div className="flex flex-wrap gap-[3px]">
       {steps.map((step, index) => (
         <span
           key={index}
-          title={`${step.label}${step.failure ? ` — ${step.failure}` : ""}`}
+          title={`${step.label}${step.failure ? `  -  ${step.failure}` : ""}`}
           className={`h-1.5 rounded-full ${step.state === "running" ? "cw-pulse" : ""}`}
           style={{
             width: steps.length > 30 ? 6 : steps.length > 8 ? 14 : 28,

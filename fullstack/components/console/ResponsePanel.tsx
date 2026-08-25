@@ -21,7 +21,7 @@ interface ResponsePanelProps {
 
 /**
  * Ticks while a call is open so latency is watchable, not just reported afterwards.
- * The effect only starts a clock — the elapsed value is derived at render time, so
+ * The effect only starts a clock  -  the elapsed value is derived at render time, so
  * opening a call never has to seed state from inside an effect.
  */
 function useElapsed(since: number | null): number {
@@ -104,14 +104,14 @@ export function ResponsePanel({ result, inFlightSince, inFlightLabel, impact }: 
         >
           <span className="text-[13px]">No call yet.</span>
           <span className="max-w-[34ch] text-[12.5px]">
-            Send the request on the left, or run a scenario below — the full response lands here.
+            Send the request on the left, or run a scenario below  -  the full response lands here.
           </span>
         </div>
       ) : tab === "body" ? (
         <>
           {result.networkError ? (
             <div className="px-4 py-3 text-[12.5px]" style={{ background: "var(--critical-wash)", color: "var(--critical)" }}>
-              {result.networkError} — is the dev server running?
+              {result.networkError}  -  is the dev server running?
             </div>
           ) : null}
           <JsonPane
@@ -176,7 +176,7 @@ function ImpactView({ impact, result }: { impact: WeightDelta[] | null; result: 
       <div className="flex flex-col gap-1.5 px-4 py-8 text-center">
         <span className="text-[13px]" style={{ color: "var(--ink-secondary)" }}>
           {result.method === "GET"
-            ? "A read changes nothing — that is the point."
+            ? "A read changes nothing  -  that is the point."
             : result.ok
               ? "No target's weight moved."
               : "Rejected, so nothing was written."}
@@ -213,7 +213,7 @@ function ImpactView({ impact, result }: { impact: WeightDelta[] | null; result: 
             className="tabular w-20 shrink-0 text-right text-[12.5px] font-semibold"
             style={{ color: delta.change >= 0 ? "var(--success)" : "var(--critical)" }}
           >
-            {delta.change >= 0 ? "+" : "−"}
+            {delta.change >= 0 ? "+" : " - "}
             {formatCompact(Math.abs(delta.change))}
           </span>
         </div>

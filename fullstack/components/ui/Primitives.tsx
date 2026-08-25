@@ -26,7 +26,7 @@ export function Panel({
 }) {
   return (
     <section
-      className={`flex min-w-0 flex-col overflow-hidden rounded-2xl ${className}`}
+      className={`dashboard-panel flex min-w-0 flex-col overflow-hidden rounded-2xl ${className}`}
       style={{
         background: tone === "raised" ? "var(--surface-raised)" : "var(--surface)",
         border: "1px solid var(--ring)",
@@ -35,7 +35,7 @@ export function Panel({
     >
       {title !== undefined ? (
         <header
-          className="flex items-center gap-3 px-4 py-2.5"
+          className="dashboard-panel-header flex items-center gap-3 px-5 py-3.5"
           style={{ borderBottom: "1px solid var(--hairline)" }}
         >
           <div className="flex min-w-0 flex-1 items-center gap-2.5">
@@ -138,7 +138,7 @@ export function IconButton({
   );
 }
 
-/** Copy-to-clipboard with its own confirmation state — used on every JSON pane. */
+/** Copy-to-clipboard with its own confirmation state  -  used on every JSON pane. */
 export function CopyButton({ value, label = "Copy" }: { value: string; label?: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -153,7 +153,7 @@ export function CopyButton({ value, label = "Copy" }: { value: string; label?: s
       await navigator.clipboard.writeText(value);
       setCopied(true);
     } catch {
-      // Clipboard access can be denied (insecure origin, permissions) — a failed
+      // Clipboard access can be denied (insecure origin, permissions)  -  a failed
       // copy shouldn't throw into the render tree, and the button just stays idle.
     }
   }

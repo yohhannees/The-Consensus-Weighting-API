@@ -65,7 +65,7 @@ export function StatTile({ label, value, format, sublabel, delta, tone = "defaul
 
   return (
     <div
-      className="flex min-w-0 flex-col gap-1.5 rounded-2xl px-4 py-3.5"
+      className="dashboard-stat flex min-w-0 flex-col gap-1.5 rounded-2xl px-4 py-4"
       style={{
         background: tone === "accent" ? "var(--accent-wash)" : "var(--surface)",
         border: `1px solid ${tone === "accent" ? "var(--accent-track)" : "var(--ring)"}`,
@@ -96,7 +96,7 @@ export function StatTile({ label, value, format, sublabel, delta, tone = "defaul
             className="tabular shrink-0 text-[12px] font-medium"
             style={{ color: delta > 0 ? "var(--success)" : "var(--critical)" }}
           >
-            {delta > 0 ? "+" : "−"}
+            {delta > 0 ? "+" : " - "}
             {format ? format(Math.abs(delta)) : Math.abs(delta).toLocaleString("en-US")}
           </span>
         ) : null}

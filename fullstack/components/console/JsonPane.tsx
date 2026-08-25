@@ -16,14 +16,14 @@ const TOKEN_COLOR: Record<JsonTokenKind, string> = {
 /**
  * A 10,000-row body is ~700 KB and 60,000 lines: rendering it as DOM nodes would
  * lock the tab. The pane shows a window of it and offers one expansion, itself
- * still capped — enough to inspect the shape without ever mounting the whole thing.
+ * still capped  -  enough to inspect the shape without ever mounting the whole thing.
  */
 const DEFAULT_VISIBLE_LINES = 160;
 const EXPANDED_VISIBLE_LINES = 2000;
 
 interface JsonPaneProps {
   text: string;
-  /** Changing this restarts the line-by-line reveal — one "arrival" per response. */
+  /** Changing this restarts the line-by-line reveal  -  one "arrival" per response. */
   revealKey?: string;
   emptyLabel?: string;
   /** Renders shimmer placeholders instead of content while a call is in flight. */

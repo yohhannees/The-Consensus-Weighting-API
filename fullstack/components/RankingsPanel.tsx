@@ -52,7 +52,7 @@ export function RankingsPanel({ weights, previous, changed, refreshing }: Rankin
           onChange={setView}
           options={[
             { value: "table", label: "Table" },
-            { value: "chart", label: "Chart", title: "Raw capital against weight, log–log" },
+            { value: "chart", label: "Chart", title: "Raw capital against weight, log - log" },
           ]}
         />
       }

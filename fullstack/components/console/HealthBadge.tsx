@@ -16,7 +16,7 @@ const LABEL: Record<Health, string> = {
 };
 
 /**
- * Polls `/api/health`, which probes the database rather than just process liveness —
+ * Polls `/api/health`, which probes the database rather than just process liveness  -
  * so "live" here means a submitted allocation can actually be persisted, not merely
  * that Next.js is answering.
  */

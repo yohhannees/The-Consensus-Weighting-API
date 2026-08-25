@@ -19,7 +19,7 @@ describe("JSON tokenizer (console syntax highlighting)", () => {
     expect(kinds).toEqual(["number", "number", "number", "boolean", "boolean", "null"]);
   });
 
-  it("never drops characters — concatenated tokens reproduce the line", () => {
+  it("never drops characters  -  concatenated tokens reproduce the line", () => {
     const line = `    { "targetId": "A", "weight": 1000000, "flag": null },`;
     expect(tokenizeJsonLine(line).map((token) => token.text).join("")).toBe(line);
   });
@@ -109,7 +109,7 @@ describe("scenario catalog", () => {
 
   it("the mechanism scenarios assert the same numbers the algorithm actually produces", () => {
     // Runs each mechanism scenario's payload through the real compute function and
-    // feeds the result to its own check — so a change to the algorithm fails here,
+    // feeds the result to its own check  -  so a change to the algorithm fails here,
     // in CI, rather than only when someone clicks Run in the browser.
     const mechanisms = built.filter(({ scenario }) => scenario.group === "mechanism" && scenario.check);
 
