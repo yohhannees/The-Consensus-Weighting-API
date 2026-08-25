@@ -1,9 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Lean, self-contained production output for the Dockerfile  -  bundles only
-  // the traced dependencies instead of shipping the full node_modules tree.
-  output: "standalone",
+  // Docker uses the self-contained traced server. Vercel supplies its own
+  // serverless output pipeline, and standalone output prevents its build
+  // analyzer from finding the expected next-server trace manifest.
+  output: process.env.VERCEL ? undefined : "standalone",
 };
 
 export default nextConfig;
