@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-raised: #ffffff;
+  --ink-primary: #0b0b0b;
+  --ink-secondary: #52514e;
+  --ink-muted: #898781;
+  --hairline: #e1e0d9;
+  --baseline: #c3c2b7;
+  --ring: rgba(11, 11, 11, 0.1);
+
+  --accent: #2a78d6;
+  --accent-ink: #ffffff;
+  --accent-track: rgba(42, 120, 214, 0.12);
+  --accent-wash: rgba(42, 120, 214, 0.08);
+
+  --success: #006300;
+  --success-wash: rgba(12, 163, 12, 0.1);
+
+  --critical: #d03b3b;
+  --critical-wash: rgba(208, 59, 59, 0.1);
+
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-raised: #212120;
+    --ink-primary: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --hairline: #2c2c2a;
+    --baseline: #383835;
+    --ring: rgba(255, 255, 255, 0.1);
+
+    --accent: #3987e5;
+    --accent-ink: #ffffff;
+    --accent-track: rgba(57, 135, 229, 0.16);
+    --accent-wash: rgba(57, 135, 229, 0.12);
+
+    --success: #0ca30c;
+    --success-wash: rgba(12, 163, 12, 0.14);
+
+    --critical: #e66767;
+    --critical-wash: rgba(230, 103, 103, 0.14);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent-wash);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,31 @@
+name: backend-only CI
+
+on:
+  push:
+    paths:
+      - "backend-only/**"
+      - ".github/workflows/backend-only.yml"
+  pull_request:
+    paths:
+      - "backend-only/**"
+      - ".github/workflows/backend-only.yml"
+
+defaults:
+  run:
+    working-directory: backend-only
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend-only/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build

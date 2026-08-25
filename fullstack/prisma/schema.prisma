@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Allocation {
+  id        String   @id @default(cuid())
+  userId    String
+  targetId  String
+  amount    Decimal  @db.Decimal(18, 2)
+  createdAt DateTime @default(now())
+
+  @@index([targetId])
+  @@index([userId, targetId])
+}

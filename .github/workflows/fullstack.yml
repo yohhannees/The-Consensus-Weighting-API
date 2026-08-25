@@ -1,0 +1,53 @@
+name: fullstack CI
+
+on:
+  push:
+    paths:
+      - "fullstack/**"
+      - ".github/workflows/fullstack.yml"
+  pull_request:
+    paths:
+      - "fullstack/**"
+      - ".github/workflows/fullstack.yml"
+
+defaults:
+  run:
+    working-directory: fullstack
+
+env:
+  DATABASE_URL: postgresql://consensus:consensus@localhost:5432/consensus_weighting
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: consensus
+          POSTGRES_PASSWORD: consensus
+          POSTGRES_DB: consensus_weighting
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U consensus"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: fullstack/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npx prisma migrate deploy
+      - run: npm test
+      - run: npm run build
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - run: npm run db:seed
+      - run: npm run test:e2e

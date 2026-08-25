@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: consensus
+      POSTGRES_PASSWORD: consensus
+      POSTGRES_DB: consensus_weighting
+    ports:
+      # Host port 5433 (not 5432) to avoid colliding with any native Postgres
+      # install already listening on the default port.
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U consensus"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Uses the in-network service name/port, not the host-mapped 5433.
+      DATABASE_URL: "postgresql://consensus:consensus@postgres:5432/consensus_weighting"
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres-data:
