@@ -37,9 +37,20 @@ model Allocation {
   @@index([targetId])
   @@index([userId, targetId])
 }
+
+model ProcessedRequest {
+  id             String   @id @default(cuid())
+  idempotencyKey String   @unique
+  createdAt      DateTime @default(now())
+}
 ```
 
 Notes:
+- `ProcessedRequest` backs the optional `Idempotency-Key` request header on `POST` (see
+  "Why persistence changes the endpoint slightly" below): recording the key and inserting the
+  allocations happen in one transaction, so a retried request with the same key hits the
+  unique constraint, the transaction rolls back, and the retry is treated as "already
+  processed" instead of persisting a second time.
 - `Decimal` (not `Float`) for `amount` — avoids the float-precision edge case (case #10 in
   [02-algorithm-and-edge-cases.md](02-algorithm-and-edge-cases.md)) at the storage layer;
   converted to `number` only at the boundary where this app's own `computeWeights` needs it.
@@ -97,6 +108,14 @@ allocations before responding, and a companion `GET` on the same path lets the d
 re-fetch current standings without resubmitting data. Both routes call this app's own
 `domain/computeWeights.ts` — persistence never touches the math, and this file has no
 dependency on `backend-only/` or vice versa.
+
+Persistence also introduces a failure mode the stateless challenge contract doesn't have: a
+client retrying a POST after a dropped connection or timeout could otherwise double-insert the
+same allocations. `POST` accepts an optional `Idempotency-Key` header to guard against exactly
+that — see the `ProcessedRequest` model above and `fullstack/README.md`'s "Run it" section for
+the request shape. This is opt-in (omitting the header preserves the original behavior) and is
+specific to `fullstack/`'s persisted design; it doesn't apply to `backend-only/`, which has
+nothing to duplicate.
 
 ## Dashboard — what it's for
 

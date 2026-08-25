@@ -14,6 +14,20 @@ a dashboard that makes the dampening effect visible at a glance.
 > [../docs/AI_STATIC_CODE_AND_LOGIC_CHECK.md](../docs/AI_STATIC_CODE_AND_LOGIC_CHECK.md#full-stack-api-semantics-differ-from-the-challenge)
 > for the full reasoning.
 
+Because `POST` persists, a client retrying an in-flight or uncertain request (timeout, dropped
+connection) risks double-counting the same allocations. An optional `Idempotency-Key` request
+header protects against this: the first request with a given key persists normally; any retry
+with the same key is detected (a unique constraint on a `ProcessedRequest` row, checked in the
+same transaction as the insert) and skipped rather than re-applied, while the response still
+returns current weights. Omitting the header preserves the original, unprotected behavior.
+
+```bash
+curl -X POST http://localhost:3000/api/allocations/weights \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: <any-client-generated-unique-string>" \
+  -d '[{"userId":"user_1","targetId":"A","amount":100}]'
+```
+
 Full design rationale lives in [../plan/](../plan/) —
 [../plan/02-algorithm-and-edge-cases.md](../plan/02-algorithm-and-edge-cases.md) has the math,
 [../plan/05-architecture-fullstack.md](../plan/05-architecture-fullstack.md) has this
@@ -94,7 +108,7 @@ lib/
   validation.ts / errors.ts          Zod schema + the API contract's error shape
   rateLimit.ts                       in-memory per-process limiter (100 req/min) on the POST route
 prisma/
-  schema.prisma, seed.ts             1 Allocation model; seed script loads the demo scenario
+  schema.prisma, seed.ts             Allocation + ProcessedRequest models; seed script loads the demo scenario
 ```
 
 `amount` is capped per-allocation at `MAX_AMOUNT` (`1e12`) and requests at `MAX_ALLOCATIONS`
@@ -106,6 +120,11 @@ aggregate sum toward floating-point precision loss or force an unbounded batch i
 same tradeoff as `backend-only/`'s default `@fastify/rate-limit` store — so it resets on
 restart and isn't shared across horizontally-scaled instances; a production multi-instance
 deployment would need a shared store (e.g. Redis) instead.
+
+Both `GET` and `POST` wrap their database calls and return a structured
+`{ "error": "InternalError", "message": "Something went wrong" }` (`500`) on failure — matching
+[../plan/03-api-contract.md](../plan/03-api-contract.md)'s error shape — instead of letting an
+unhandled Prisma error surface as an unstructured framework error page.
 
 Weights are **derived, computed on every read** from persisted allocations — never cached or
 stored — so the dashboard can never show a stale number after a new submission. See

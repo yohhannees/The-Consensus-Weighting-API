@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { computeWeights } from "../../domain/computeWeights";
 import type { Allocation } from "../../domain/types";
+import { MAX_ALLOCATIONS, MAX_AMOUNT } from "../../lib/validation";
 
 const concentratedAllocations: Allocation[] = [{ userId: "user_1", targetId: "A", amount: 10_000 }];
 
@@ -95,5 +96,32 @@ describe("edge cases", () => {
       { userId: "user_2", targetId: "A", amount: 100 },
     ]);
     expect(results.map((r) => r.targetId)).toEqual(["A", "Z"]);
+  });
+
+  it("stays finite for a request at both the maximum row count and the maximum per-row amount at once", () => {
+    const allocations: Allocation[] = Array.from({ length: MAX_ALLOCATIONS }, (_, i) => ({
+      userId: `user_${i}`,
+      targetId: "A",
+      amount: MAX_AMOUNT,
+    }));
+    const [result] = computeWeights(allocations);
+    expect(Number.isFinite(result!.rawTotal)).toBe(true);
+    expect(Number.isFinite(result!.weight)).toBe(true);
+  });
+
+  it("trims Unicode whitespace (no-break space, ideographic space) around userId, not just ASCII spaces", () => {
+    const [result] = computeWeights([
+      { userId: "user_1", targetId: "A", amount: 50 },
+      { userId: " user_1　", targetId: "A", amount: 50 },
+    ]);
+    expect(result).toEqual({ targetId: "A", rawTotal: 100, uniqueUserCount: 1, weight: 100 });
+  });
+
+  it("treats non-Latin-script and emoji userIds as ordinary opaque identifiers, not special-cased", () => {
+    const results = computeWeights([
+      { userId: "用户_1", targetId: "A", amount: 50 },
+      { userId: "🙂user_2", targetId: "A", amount: 50 },
+    ]);
+    expect(results).toEqual([{ targetId: "A", rawTotal: 100, uniqueUserCount: 2, weight: 200 }]);
   });
 });

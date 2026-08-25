@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "../../app/api/allocations/weights/route";
 import { prisma } from "../../lib/prisma";
 import { MAX_ALLOCATIONS, MAX_AMOUNT } from "../../lib/validation";
@@ -7,8 +7,10 @@ import { MAX_ALLOCATIONS, MAX_AMOUNT } from "../../lib/validation";
 // the demo seed data (Target A / Target B) that the dashboard displays.
 const TEST_PREFIX = "vitest_api_";
 
-function post(payload: unknown): Promise<Response> {
-  return POST(new Request("http://test.local/api/allocations/weights", { method: "POST", body: JSON.stringify(payload) }));
+function post(payload: unknown, headers?: Record<string, string>): Promise<Response> {
+  return POST(
+    new Request("http://test.local/api/allocations/weights", { method: "POST", headers, body: JSON.stringify(payload) }),
+  );
 }
 
 describe("POST /api/allocations/weights", () => {
@@ -21,6 +23,7 @@ describe("POST /api/allocations/weights", () => {
 
   afterAll(async () => {
     await prisma.allocation.deleteMany({ where: { targetId: { startsWith: TEST_PREFIX } } });
+    await prisma.processedRequest.deleteMany({ where: { idempotencyKey: { startsWith: TEST_PREFIX } } });
   });
 
   it("persists allocations and returns weights for the full accumulated dataset", async () => {
@@ -121,6 +124,47 @@ describe("POST /api/allocations/weights", () => {
       { index: 1, field: "amount", value: "not-a-number" },
     ]);
   });
+
+  it("does not duplicate allocations when the same Idempotency-Key is POSTed twice", async () => {
+    const targetId = `${TEST_PREFIX}idempotent`;
+    const idempotencyKey = `${TEST_PREFIX}key-${Date.now()}-${Math.random()}`;
+    const payload = [{ userId: `${TEST_PREFIX}user_idem`, targetId, amount: 100 }];
+
+    const first = await post(payload, { "Idempotency-Key": idempotencyKey });
+    const second = await post(payload, { "Idempotency-Key": idempotencyKey });
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+
+    const rows = await prisma.allocation.findMany({ where: { targetId } });
+    expect(rows).toHaveLength(1);
+  });
+
+  it("persists independently on repeat POSTs when no Idempotency-Key is given (prior behavior preserved)", async () => {
+    const targetId = `${TEST_PREFIX}no_key`;
+    const payload = [{ userId: `${TEST_PREFIX}user_no_key`, targetId, amount: 100 }];
+
+    await post(payload);
+    await post(payload);
+
+    const rows = await prisma.allocation.findMany({ where: { targetId } });
+    expect(rows).toHaveLength(2);
+  });
+
+  // This is the one test in the file that mocks Prisma rather than hitting real Postgres — the
+  // whole point is to exercise a failure path (a healthy database can't be made to fail on
+  // demand) and confirm it degrades to the documented { error, message } contract instead of
+  // an unstructured framework error page.
+  it("returns a structured 500 InternalError when persisting fails, not an unstructured framework error", async () => {
+    const spy = vi.spyOn(prisma.allocation, "createMany").mockRejectedValueOnce(new Error("simulated database failure"));
+
+    const response = await post([{ userId: "user_1", targetId: "A", amount: 1 }]);
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: "InternalError", message: "Something went wrong" });
+
+    spy.mockRestore();
+  });
 });
 
 describe("GET /api/allocations/weights", () => {
@@ -133,6 +177,17 @@ describe("GET /api/allocations/weights", () => {
     expect(targetIds.indexOf("B")).toBeGreaterThanOrEqual(0);
     expect(targetIds.indexOf("A")).toBeGreaterThanOrEqual(0);
     expect(targetIds.indexOf("B")).toBeLessThan(targetIds.indexOf("A"));
+  });
+
+  it("returns a structured 500 InternalError when the database read fails, not an unstructured framework error", async () => {
+    const spy = vi.spyOn(prisma.allocation, "findMany").mockRejectedValueOnce(new Error("simulated database failure"));
+
+    const response = await GET();
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: "InternalError", message: "Something went wrong" });
+
+    spy.mockRestore();
   });
 });
 
