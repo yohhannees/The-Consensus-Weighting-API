@@ -8,7 +8,7 @@ export interface DashboardData {
   totalRawCapital: number;
 }
 
-/** Recomputes weights (and summary stats) from every allocation ever persisted — always fresh, never cached. */
+/** Recomputes weights (and summary stats) from every allocation ever persisted  -  always fresh, never cached. */
 export async function getDashboardData(): Promise<DashboardData> {
   const rows = await prisma.allocation.findMany({
     select: { userId: true, targetId: true, amount: true },
@@ -27,7 +27,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   };
 }
 
-/** Weights only — used by the API route, which doesn't need the summary stats. */
+/** Weights only  -  used by the API route, which doesn't need the summary stats. */
 export async function getTargetWeights(): Promise<TargetWeight[]> {
   return (await getDashboardData()).weights;
 }

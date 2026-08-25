@@ -1,9 +1,9 @@
-# AI Static Code and Logic Check — V2
+# AI Static Code and Logic Check  -  V2
 
-**Project:** The Consensus Weighting API  
-**Review date:** 2026-08-25  
-**Compared with:** `docs/AI_STATIC_CODE_AND_LOGIC_CHECK.md` (V1)  
-**Review scope:** `backend-only/`, `fullstack/`, tests, documentation, build configuration, Docker configuration, and API semantics  
+**Project:** The Consensus Weighting API
+**Review date:** 2026-08-25
+**Compared with:** `docs/AI_STATIC_CODE_AND_LOGIC_CHECK.md` (V1)
+**Review scope:** `backend-only/`, `fullstack/`, tests, documentation, build configuration, Docker configuration, and API semantics
 **Review mode:** Read-only inspection plus local verification commands. No application source code was changed during this review.
 
 ## 1. V2 conclusion
@@ -30,7 +30,7 @@ The core algorithm remains correct in both projects. The main remaining issue is
 Commands run from `backend-only/`:
 
 ```text
-npm test          PASS — 2 test files, 26 tests
+npm test          PASS  -  2 test files, 26 tests
 npm run typecheck PASS
 npm run build     PASS
 npm run lint      PASS
@@ -48,7 +48,7 @@ COPY tsconfig.json tsconfig.build.json ./
 Commands run from `fullstack/`:
 
 ```text
-npm test          PASS — 3 test files, 27 tests
+npm test          PASS  -  3 test files, 27 tests
 npm run typecheck PASS
 npm run lint      PASS
 npm run build     PASS

@@ -19,7 +19,7 @@ export const allocationSchema = z.object({
     .nonnegative("amount must be a non-negative number")
     .max(MAX_AMOUNT, `amount must not exceed ${MAX_AMOUNT}`)
     // Storage is Decimal(18,2), so anything finer would be silently rounded on
-    // insert — the persisted rawTotal would no longer match what the caller sent.
+    // insert  -  the persisted rawTotal would no longer match what the caller sent.
     // Reject it at the boundary instead. Round-tripping through cents (rather
     // than an epsilon on n*100) stays exact across the whole allowed range:
     // n*100's float noise is well under 0.5 even at MAX_AMOUNT, so a true

@@ -1,8 +1,8 @@
 # AI Static Code and Logic Check
 
-**Project:** The Consensus Weighting API  
-**Review date:** 2026-08-25  
-**Review scope:** `backend-only/`, `fullstack/`, shared design documentation, tests, build configuration, and container configuration  
+**Project:** The Consensus Weighting API
+**Review date:** 2026-08-25
+**Review scope:** `backend-only/`, `fullstack/`, shared design documentation, tests, build configuration, and container configuration
 **Review mode:** Read-only code review plus local verification commands. No application source code was changed during this review.
 
 ## 1. Executive assessment
@@ -120,11 +120,11 @@ The additional `/health` and Swagger routes do not interfere with the required e
 Commands run from `backend-only/`:
 
 ```text
-npm test          PASS — 2 test files, 20 tests
+npm test          PASS  -  2 test files, 20 tests
 npm run typecheck PASS
 npm run build     PASS
 npm run lint      PASS
-npm audit --omit=dev --audit-level=high PASS — 0 vulnerabilities
+npm audit --omit=dev --audit-level=high PASS  -  0 vulnerabilities
 ```
 
 The backend tests cover the required scenario end-to-end through Fastify injection as well as directly through the domain function.
@@ -309,21 +309,21 @@ Recommended safeguards:
 
 ## 7. Prioritized action plan
 
-### P0 — required before submission
+### P0  -  required before submission
 
 1. Fix the backend Dockerfile by copying `tsconfig.build.json`.
 2. Run the Docker build again and verify the container endpoint with `curl`.
 3. Publish the repository and add the GitHub link.
 4. Make the backend-only folder the clearly identified official solution.
 
-### P1 — strongly recommended
+### P1  -  strongly recommended
 
 1. Resolve the full-stack database test timeout or mark the full-stack test as environment-dependent.
 2. Clarify that the full-stack POST endpoint is persistent and therefore differs from the stateless challenge contract.
 3. Add request-size and numeric-range limits.
 4. Add overflow and target-ID normalization tests.
 
-### P2 — production-quality improvements
+### P2  -  production-quality improvements
 
 1. Use decimal arithmetic throughout the full-stack calculation path.
 2. Add rate limiting and payload limits to the full-stack route.

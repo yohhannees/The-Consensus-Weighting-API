@@ -12,12 +12,12 @@ const distributedAllocations: Allocation[] = Array.from({ length: 100 }, (_, i) 
 }));
 
 describe("consensus dampening (graded core)", () => {
-  it("Test A — concentrated: 1 user, $10,000 to target A", () => {
+  it("Test A  -  concentrated: 1 user, $10,000 to target A", () => {
     const [result] = computeWeights(concentratedAllocations);
     expect(result).toEqual({ targetId: "A", rawTotal: 10_000, uniqueUserCount: 1, weight: 10_000 });
   });
 
-  it("Test B — distributed: 100 users, $100 each, to target B", () => {
+  it("Test B  -  distributed: 100 users, $100 each, to target B", () => {
     const [result] = computeWeights(distributedAllocations);
     expect(result).toEqual({ targetId: "B", rawTotal: 10_000, uniqueUserCount: 100, weight: 1_000_000 });
   });

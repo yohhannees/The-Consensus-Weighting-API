@@ -23,7 +23,7 @@ export function registerErrorHandler(app: FastifyInstance): void {
 
     // Fastify and its plugins attach a statusCode to errors they raise themselves
     // (malformed JSON body → 400, unsupported content-type → 415, rate limit → 429).
-    // Those are the client's fault, not ours — pass them through in the contract's
+    // Those are the client's fault, not ours  -  pass them through in the contract's
     // { error, message } shape instead of masking them as a 500 (which would both
     // misreport client errors as server faults and strip the rate limiter's
     // back-off signal).

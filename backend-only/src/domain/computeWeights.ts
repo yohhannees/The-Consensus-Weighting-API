@@ -6,7 +6,7 @@ function round2(n: number): number {
 
 /**
  * Assumes allocations have already passed boundary validation (finite,
- * non-negative amount; non-empty userId/targetId) — see schemas/allocation.schema.ts.
+ * non-negative amount; non-empty userId/targetId)  -  see schemas/allocation.schema.ts.
  * Zero-amount allocations are dropped here rather than at validation because
  * zero is well-formed input, just not a contribution (see plan edge case #3).
  */

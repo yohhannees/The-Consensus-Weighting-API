@@ -9,14 +9,14 @@ const databaseUrl = process.env.DATABASE_URL;
  * scenario), so refuse to run against anything that isn't a local database
  * unless the caller explicitly opts in with SEED_FORCE=1. Without this guard,
  * an .env pointing at a shared/remote database would let a casual
- * `npm run db:seed` — or the e2e suite, which reseeds automatically — wipe it.
+ * `npm run db:seed`  -  or the e2e suite, which reseeds automatically  -  wipe it.
  */
 function assertSafeTarget(url: string): void {
   const host = new URL(url).hostname;
   const isLocal = host === "localhost" || host === "127.0.0.1" || host === "::1";
   if (!isLocal && process.env.SEED_FORCE !== "1") {
     throw new Error(
-      `Refusing to seed non-local database host "${host}" — seeding deletes every allocation. ` +
+      `Refusing to seed non-local database host "${host}"  -  seeding deletes every allocation. ` +
         `Set SEED_FORCE=1 to override if you really mean it.`,
     );
   }
@@ -41,7 +41,7 @@ async function main(): Promise<void> {
 
   // One transaction: a concurrent reader never observes the half-reset state
   // (empty table, or old ProcessedRequest keys against new data). Clearing
-  // ProcessedRequest matters too — stale idempotency keys from before a reset
+  // ProcessedRequest matters too  -  stale idempotency keys from before a reset
   // would otherwise silently no-op re-submissions of the demo scenario.
   await prisma.$transaction([
     prisma.allocation.deleteMany(),

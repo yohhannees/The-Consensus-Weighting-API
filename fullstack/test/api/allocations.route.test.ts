@@ -153,7 +153,7 @@ describe("POST /api/allocations/weights", () => {
 
     expect(first.status).toBe(200);
     // Before bodyHash existed this silently returned 200 and discarded the second
-    // payload — a client bug (key reuse) lost data with a success status.
+    // payload  -  a client bug (key reuse) lost data with a success status.
     expect(second.status).toBe(409);
     expect(((await second.json()) as { error: string }).error).toBe("IdempotencyConflict");
 
@@ -179,7 +179,7 @@ describe("POST /api/allocations/weights", () => {
   it("returns 429 once a client exhausts the rate limit, without touching the database", async () => {
     // Unique forwarded-for key so this test can't exhaust the shared "unknown"
     // bucket the rest of the suite implicitly uses. Invalid-JSON requests are
-    // used because the limiter runs before parsing — each costs no DB round trip.
+    // used because the limiter runs before parsing  -  each costs no DB round trip.
     const headers = { "x-forwarded-for": `${TEST_PREFIX}rate-${Date.now()}-${Math.random()}` };
     const badJson = () =>
       POST(new Request("http://test.local/api/allocations/weights", { method: "POST", headers, body: "not json" }));
@@ -203,7 +203,7 @@ describe("POST /api/allocations/weights", () => {
     expect(rows).toHaveLength(2);
   });
 
-  // This is the one test in the file that mocks Prisma rather than hitting real Postgres — the
+  // This is the one test in the file that mocks Prisma rather than hitting real Postgres  -  the
   // whole point is to exercise a failure path (a healthy database can't be made to fail on
   // demand) and confirm it degrades to the documented { error, message } contract instead of
   // an unstructured framework error page.
@@ -264,7 +264,7 @@ describe("GET /api/allocations/weights", () => {
 
 // File-scoped, not describe-scoped: both suites above share this one Prisma client
 // (see lib/prisma.ts's global singleton), so the pool must only close once everything
-// in this file is done with it — closing it inside either suite's own afterAll would
+// in this file is done with it  -  closing it inside either suite's own afterAll would
 // break whichever suite runs after.
 afterAll(async () => {
   await prisma.$disconnect();

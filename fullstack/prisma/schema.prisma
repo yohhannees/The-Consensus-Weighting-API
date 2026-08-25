@@ -20,7 +20,7 @@ model Allocation {
 
 // Records an Idempotency-Key from a POST /api/allocations/weights request once its
 // allocations have been persisted. A retried request with the same key hits this table's
-// unique constraint, so the route can detect "already processed" and skip re-inserting —
+// unique constraint, so the route can detect "already processed" and skip re-inserting  -
 // without this, a network retry after an uncertain response could double-count allocations.
 //
 // bodyHash binds the key to the exact payload it was first used with: a retry with the

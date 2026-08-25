@@ -29,3 +29,22 @@ export function consensusMultiplier(weight: number, rawTotal: number): number {
   if (rawTotal === 0) return 0;
   return weight / rawTotal;
 }
+
+/** 2048 -> "2.0 KB". Used for request/response payload sizes in the console. */
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/** 12.4 -> "12 ms", 1240 -> "1.24 s". Latency reads better without false precision. */
+export function formatDuration(ms: number): string {
+  if (ms < 1000) return `${Math.round(ms)} ms`;
+  return `${(ms / 1000).toFixed(2)} s`;
+}
+
+/** Signed relative change between two weights, e.g. +18.4% — null when there is no baseline. */
+export function percentDelta(next: number, previous: number): number | null {
+  if (previous === 0) return null;
+  return ((next - previous) / previous) * 100;
+}

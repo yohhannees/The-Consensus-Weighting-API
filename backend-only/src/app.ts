@@ -16,7 +16,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
 
   registerErrorHandler(app);
 
-  // global: false — the limit protects the (comparatively expensive) scoring
+  // global: false  -  the limit protects the (comparatively expensive) scoring
   // endpoint, applied per-route in allocations.route.ts. /health must stay
   // exempt so infrastructure probes can't be starved out (or themselves starve
   // real traffic), and /docs serves several static assets per page load that

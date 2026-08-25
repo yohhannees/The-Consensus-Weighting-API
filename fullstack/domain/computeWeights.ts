@@ -6,7 +6,7 @@ function round2(n: number): number {
 
 /**
  * Own, independent implementation of the same spec as backend-only/src/domain/computeWeights.ts
- * (see plan/02-algorithm-and-edge-cases.md) — no shared package between the two apps.
+ * (see plan/02-algorithm-and-edge-cases.md)  -  no shared package between the two apps.
  *
  * Assumes allocations have already passed boundary validation (finite, non-negative
  * amount; non-empty userId/targetId). Zero-amount allocations are dropped here rather

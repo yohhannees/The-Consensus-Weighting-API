@@ -63,6 +63,6 @@ test("submitting a new allocation through the form updates the leaderboard witho
   await page.getByLabel("Amount").first().fill("42");
   await page.getByRole("button", { name: "Submit allocations" }).click();
 
-  await expect(page.getByText("Submitted — the leaderboard has been updated.")).toBeVisible();
+  await expect(page.getByText("Submitted  -  the leaderboard has been updated.")).toBeVisible();
   await expect(page.locator("tbody")).toContainText("E2E");
 });

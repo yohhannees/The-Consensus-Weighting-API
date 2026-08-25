@@ -19,7 +19,7 @@ export class ValidationError extends Error {
 /**
  * The Zod schema validates the whole array in one pass, so a single bad row
  * still needs its own {index, field, value} pulled back out of the raw body
- * for the API contract's details array — Zod's issue.path carries the index
+ * for the API contract's details array  -  Zod's issue.path carries the index
  * and field, but not a copy of the offending value.
  */
 export function validationErrorFromZod(error: ZodError, rawBody: unknown): ValidationError {

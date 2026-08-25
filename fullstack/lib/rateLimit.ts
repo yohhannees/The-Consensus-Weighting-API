@@ -6,7 +6,7 @@ let lastSweepAt = 0;
 
 /**
  * Drops keys whose every timestamp has aged out of the window. Without this,
- * the map grows by one entry per distinct client key forever — a slow leak,
+ * the map grows by one entry per distinct client key forever  -  a slow leak,
  * and an unbounded one if clients can mint arbitrary keys (see the
  * x-forwarded-for caveat on clientKeyFromRequest). Runs at most once per
  * window so the sweep itself stays O(keys) amortized, not per-request.

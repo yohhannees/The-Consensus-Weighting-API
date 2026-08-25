@@ -4,7 +4,7 @@ import { concentratedAllocations, distributedAllocations } from "../fixtures/con
 import { MAX_ALLOCATIONS, MAX_AMOUNT } from "../../src/schemas/allocation.schema.js";
 
 describe("consensus dampening (graded core)", () => {
-  it("Test A — concentrated: 1 user, $10,000 to target A", () => {
+  it("Test A  -  concentrated: 1 user, $10,000 to target A", () => {
     const [result] = computeWeights(concentratedAllocations);
     expect(result).toEqual({
       targetId: "A",
@@ -14,7 +14,7 @@ describe("consensus dampening (graded core)", () => {
     });
   });
 
-  it("Test B — distributed: 100 users, $100 each, to target B", () => {
+  it("Test B  -  distributed: 100 users, $100 each, to target B", () => {
     const [result] = computeWeights(distributedAllocations);
     expect(result).toEqual({
       targetId: "B",
@@ -30,7 +30,7 @@ describe("consensus dampening (graded core)", () => {
 
     expect(weightA!.rawTotal).toBe(weightB!.rawTotal); // same $10,000, so the gap is purely from distribution
     expect(weightB!.weight).toBeGreaterThanOrEqual(weightA!.weight * 2);
-    // The formula clears the spec's 2x bar by a wide margin — pin the exact ratio
+    // The formula clears the spec's 2x bar by a wide margin  -  pin the exact ratio
     // so a future formula change that weakens dampening fails loudly, not silently.
     expect(weightB!.weight).toBe(weightA!.weight * 100);
   });
@@ -65,7 +65,7 @@ describe("edge cases", () => {
     expect(results.find((r) => r.targetId === "B")?.uniqueUserCount).toBe(1);
   });
 
-  it("drops zero-amount allocations — no rawTotal, no uniqueUserCount contribution (#3)", () => {
+  it("drops zero-amount allocations  -  no rawTotal, no uniqueUserCount contribution (#3)", () => {
     const results = computeWeights([
       { userId: "user_1", targetId: "A", amount: 0 },
       { userId: "user_2", targetId: "B", amount: 100 },

@@ -27,7 +27,7 @@ function rateLimitedResponse(): Response {
 }
 
 /**
- * Hash of the validated (post-trim, post-parse) rows — so a retry that differs only in
+ * Hash of the validated (post-trim, post-parse) rows  -  so a retry that differs only in
  * JSON whitespace or key order still counts as "the same request", while any change to
  * the actual allocations does not.
  */
@@ -45,7 +45,7 @@ function hashAllocations(data: AllocationInput[]): string {
  * whole transaction rolls back (so the allocations are NOT re-inserted). The recorded
  * bodyHash then decides what that collision means: same hash → the retry is "already
  * processed", succeed without re-inserting; different hash → the client reused a key for a
- * different payload, which would otherwise silently discard their data — surface it as a
+ * different payload, which would otherwise silently discard their data  -  surface it as a
  * 409 IdempotencyConflict instead. (Rows recorded before bodyHash existed have null and
  * are treated as key-only matches.)
  */
@@ -80,7 +80,7 @@ async function persistAllocations(data: AllocationInput[], idempotencyKey: strin
   }
 }
 
-/** Recomputes weights from every allocation ever persisted — always fresh, never cached. */
+/** Recomputes weights from every allocation ever persisted  -  always fresh, never cached. */
 export async function GET(request: Request): Promise<Response> {
   // Rate-limited like POST: this read does a full-table load + recompute, so an
   // unauthenticated flood of GETs is at least as expensive as a flood of POSTs.
@@ -97,7 +97,7 @@ export async function GET(request: Request): Promise<Response> {
 
 /**
  * Persists the submitted allocations, then returns weights for the full accumulated dataset.
- * An `Idempotency-Key` request header makes retries of the same request safe — see
+ * An `Idempotency-Key` request header makes retries of the same request safe  -  see
  * `persistAllocations` above. The header is optional; omitting it preserves prior behavior.
  */
 export async function POST(request: Request): Promise<Response> {

@@ -2,7 +2,7 @@
 
 ## The two required tests (the graded core)
 
-This suite is written once here as the spec, then implemented **twice** — once in
+This suite is written once here as the spec, then implemented **twice**  -  once in
 `backend-only/test/unit/computeWeights.test.ts` against that app's own
 `src/domain/computeWeights.ts`, and once in `fullstack/test/unit/computeWeights.test.ts`
 against its own `domain/computeWeights.ts`. Same assertions, two independent
@@ -12,7 +12,7 @@ implementations under test, no shared import between them.
 import { computeWeights } from "../../src/domain/computeWeights"; // path per-implementation
 
 describe("consensus dampening", () => {
-  it("Test A — concentrated: 1 user, $10,000 to target A", () => {
+  it("Test A  -  concentrated: 1 user, $10,000 to target A", () => {
     const result = computeWeights([
       { userId: "user_1", targetId: "A", amount: 10_000 },
     ]);
@@ -21,7 +21,7 @@ describe("consensus dampening", () => {
     expect(result[0].weight).toBe(10_000); // sqrt(10000)^2
   });
 
-  it("Test B — distributed: 100 users, $100 each, to target B", () => {
+  it("Test B  -  distributed: 100 users, $100 each, to target B", () => {
     const allocations = Array.from({ length: 100 }, (_, i) => ({
       userId: `user_${i}`,
       targetId: "B",
@@ -54,7 +54,7 @@ describe("consensus dampening", () => {
 ```
 
 The third test is the one that's literally graded against ("must assert Target B's weight is
-at least 2x Target A's") — written as `>= 2 *`, not `> 2 *`, to match the spec's wording
+at least 2x Target A's")  -  written as `>= 2 *`, not `> 2 *`, to match the spec's wording
 exactly, with a second, stricter assertion (`=== 100x`) alongside it so a future change to the
 formula that weakens dampening below the proven ratio fails loudly instead of silently
 passing a loose bound.
@@ -78,10 +78,10 @@ passing a loose bound.
 
 ## Layer-by-layer coverage
 
-- **`domain/computeWeights.ts` (each implementation, own copy)**: pure unit tests, no I/O —
+- **`domain/computeWeights.ts` (each implementation, own copy)**: pure unit tests, no I/O  -
   this is where the math tests above live, and where most edge-case tests live (fastest, most
   isolated). Written and passing independently in both `backend-only/` and `fullstack/`.
-- **`backend-only/`**: integration tests via Fastify's `app.inject()` — verifies HTTP status
+- **`backend-only/`**: integration tests via Fastify's `app.inject()`  -  verifies HTTP status
   codes, error response shape, and that the route correctly wires request → `computeWeights` →
   response, without re-testing the math itself.
 - **`fullstack/`**: API route tests hitting the Next.js route handler against a test Postgres
