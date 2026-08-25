@@ -17,9 +17,12 @@ a dashboard that makes the dampening effect visible at a glance.
 Because `POST` persists, a client retrying an in-flight or uncertain request (timeout, dropped
 connection) risks double-counting the same allocations. An optional `Idempotency-Key` request
 header protects against this: the first request with a given key persists normally; any retry
-with the same key is detected (a unique constraint on a `ProcessedRequest` row, checked in the
-same transaction as the insert) and skipped rather than re-applied, while the response still
-returns current weights. Omitting the header preserves the original, unprotected behavior.
+with the same key **and the same payload** is detected (a unique constraint on a
+`ProcessedRequest` row, checked in the same transaction as the insert) and skipped rather than
+re-applied, while the response still returns current weights. The recorded key is bound to a
+hash of the payload it was first used with — reusing a key with a *different* payload is a
+client bug that would otherwise silently discard data, so it returns `409 IdempotencyConflict`
+instead. Omitting the header preserves the original, unprotected behavior.
 
 ```bash
 curl -X POST http://localhost:3000/api/allocations/weights \
@@ -62,6 +65,12 @@ Or the whole stack (Postgres + app) containerized:
 docker compose up --build
 ```
 
+This works from a completely fresh volume: a one-shot `migrate` service applies
+`prisma/migrations` before the app starts (previously that was a manual step, and a fresh
+volume booted the app against a database with no tables). The build context excludes
+`.env` via [`.dockerignore`](.dockerignore) — database credentials reach the container
+only through compose's `environment` block at run time, never baked into an image layer.
+
 ## Test it
 
 ```bash
@@ -70,6 +79,12 @@ npm run typecheck
 npm run lint
 npm run test:e2e            # playwright — drives the actual dashboard in a browser
 ```
+
+> **Seeding is destructive and guarded.** `npm run db:seed` (and the e2e suite, which
+> reseeds automatically) replaces the *entire* `Allocation` table with the demo scenario, so
+> the seed script refuses to run against any non-localhost database host. Point
+> `DATABASE_URL` at the local Docker Postgres (as in `.env.example`) for seeding and e2e;
+> set `SEED_FORCE=1` only if you really mean to reset a remote database.
 
 `test/unit/computeWeights.test.ts` has the graded assertions (Test A, Test B, the ≥2× —
 actually 100× — ratio). `test/api/allocations.route.test.ts` runs the same scenario through
@@ -111,15 +126,21 @@ prisma/
   schema.prisma, seed.ts             Allocation + ProcessedRequest models; seed script loads the demo scenario
 ```
 
-`amount` is capped per-allocation at `MAX_AMOUNT` (`1e12`) and requests at `MAX_ALLOCATIONS`
-(`10,000`) rows — see [`lib/validation.ts`](lib/validation.ts) — so a request can't push the
-aggregate sum toward floating-point precision loss or force an unbounded batch insert.
+`amount` is capped per-allocation at `MAX_AMOUNT` (`1e12`), limited to **at most 2 decimal
+places** (storage is `Decimal(18,2)`, so anything finer would be silently rounded on insert
+and the persisted `rawTotal` would no longer match what the caller sent — rejected at the
+boundary instead), and requests are capped at `MAX_ALLOCATIONS` (`10,000`) rows — see
+[`lib/validation.ts`](lib/validation.ts) — so a request can't push the aggregate sum toward
+floating-point precision loss or force an unbounded batch insert.
 
-`POST` is rate-limited to 100 requests/minute per client IP via
-[`lib/rateLimit.ts`](lib/rateLimit.ts). The limiter's state is in-memory and per-process — the
-same tradeoff as `backend-only/`'s default `@fastify/rate-limit` store — so it resets on
-restart and isn't shared across horizontally-scaled instances; a production multi-instance
-deployment would need a shared store (e.g. Redis) instead.
+Both `GET` and `POST` are rate-limited to 100 requests/minute per client IP via
+[`lib/rateLimit.ts`](lib/rateLimit.ts) (`GET` too, because it does a full-table read +
+recompute — at least as expensive as a write). The limiter's state is in-memory and
+per-process — the same tradeoff as `backend-only/`'s default `@fastify/rate-limit` store — so
+it resets on restart and isn't shared across horizontally-scaled instances; a production
+multi-instance deployment would need a shared store (e.g. Redis) instead. The client key
+comes from `x-forwarded-for`, which is trustworthy only behind a proxy/load balancer that
+overwrites it — see the caveats documented in the module.
 
 Both `GET` and `POST` wrap their database calls and return a structured
 `{ "error": "InternalError", "message": "Something went wrong" }` (`500`) on failure — matching

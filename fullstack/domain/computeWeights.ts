@@ -18,11 +18,15 @@ export function computeWeights(allocations: Allocation[]): TargetWeight[] {
   for (const { userId, targetId, amount } of allocations) {
     if (amount === 0) continue;
 
+    // Both ids are trimmed at the validation boundary already; trimming both
+    // again here (not just userId) keeps direct library callers from getting
+    // asymmetric merge semantics between the two grouping keys.
     const trimmedUserId = userId.trim();
-    let userTotals = perTargetUserTotals.get(targetId);
+    const trimmedTargetId = targetId.trim();
+    let userTotals = perTargetUserTotals.get(trimmedTargetId);
     if (!userTotals) {
       userTotals = new Map<string, number>();
-      perTargetUserTotals.set(targetId, userTotals);
+      perTargetUserTotals.set(trimmedTargetId, userTotals);
     }
     userTotals.set(trimmedUserId, (userTotals.get(trimmedUserId) ?? 0) + amount);
   }

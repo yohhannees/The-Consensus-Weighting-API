@@ -1,0 +1,21 @@
+# Keep the build context to source only. Two of these are load-bearing:
+#  - .env*: the local env file may hold real database credentials; without this
+#    line `COPY . .` would bake them into an image layer for anyone with image
+#    access to read. Configuration enters the container at RUN time only
+#    (see docker-compose.yml's environment block).
+#  - node_modules: the host tree is platform-specific (and huge); the image
+#    installs its own via `npm ci`. Copying the host's over it would mix
+#    Windows/Linux artifacts.
+node_modules
+.next
+generated
+.env*
+!.env.example
+.git
+test
+playwright-report
+test-results
+*.tsbuildinfo
+Dockerfile
+docker-compose.yml
+.dockerignore

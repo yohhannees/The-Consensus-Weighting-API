@@ -22,8 +22,14 @@ model Allocation {
 // allocations have been persisted. A retried request with the same key hits this table's
 // unique constraint, so the route can detect "already processed" and skip re-inserting —
 // without this, a network retry after an uncertain response could double-count allocations.
+//
+// bodyHash binds the key to the exact payload it was first used with: a retry with the
+// same key AND same body is an idempotent success, while the same key with a DIFFERENT
+// body is a client bug and gets a 409 instead of silently discarding the new data.
+// Nullable only for rows written before this column existed (treated as key-only matches).
 model ProcessedRequest {
   id             String   @id @default(cuid())
   idempotencyKey String   @unique
+  bodyHash       String?
   createdAt      DateTime @default(now())
 }

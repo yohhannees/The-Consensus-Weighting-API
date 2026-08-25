@@ -146,6 +146,14 @@ describe("edge cases", () => {
     expect(result).toEqual({ targetId: "A", rawTotal: 100, uniqueUserCount: 1, weight: 100 });
   });
 
+  it("trims whitespace around targetId too, merging it with an untrimmed duplicate (symmetry with userId)", () => {
+    const results = computeWeights([
+      { userId: "user_1", targetId: "A", amount: 50 },
+      { userId: "user_2", targetId: " A ", amount: 50 },
+    ]);
+    expect(results).toEqual([{ targetId: "A", rawTotal: 100, uniqueUserCount: 2, weight: 200 }]);
+  });
+
   it("treats non-Latin-script and emoji userIds as ordinary opaque identifiers, not special-cased", () => {
     const results = computeWeights([
       { userId: "用户_1", targetId: "A", amount: 50 },

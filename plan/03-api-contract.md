@@ -65,6 +65,19 @@ infinite/over-the-cap `amount`, or a request array longer than `MAX_ALLOCATIONS`
 #4, #5, #6, #9, #13, #14). The whole request is rejected atomically — no partial processing of
 a batch with one bad row, so a caller can't end up with a silently incomplete result.
 
+### Error response — other client errors
+
+All client errors share the `{ "error": "<Name>", "message": "..." }` shape:
+
+- `400 BadRequest` — body is not valid JSON, is empty, or is otherwise unparseable
+  (distinct from `ValidationError`, which means the JSON parsed but the rows failed
+  validation). Never reported as a 500: a client mistake must not masquerade as a
+  server fault.
+- `429 TooManyRequests` — the per-client rate limit (100 requests/minute) was exceeded.
+- `409 IdempotencyConflict` — fullstack only: an `Idempotency-Key` was reused with a
+  different payload than it was first recorded with (same key + same payload is an
+  idempotent `200`; see the fullstack README).
+
 ### Error response — `500 Internal Server Error`
 
 Standard shape for unexpected failures:

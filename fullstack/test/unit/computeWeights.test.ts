@@ -72,6 +72,14 @@ describe("edge cases", () => {
     expect(result?.weight).toBe(100);
   });
 
+  it("trims whitespace around targetId too, merging it with an untrimmed duplicate (symmetry with userId)", () => {
+    const results = computeWeights([
+      { userId: "user_1", targetId: "A", amount: 50 },
+      { userId: "user_2", targetId: " A ", amount: 50 },
+    ]);
+    expect(results).toEqual([{ targetId: "A", rawTotal: 100, uniqueUserCount: 2, weight: 200 }]);
+  });
+
   it("returns an empty array for empty input", () => {
     expect(computeWeights([])).toEqual([]);
   });

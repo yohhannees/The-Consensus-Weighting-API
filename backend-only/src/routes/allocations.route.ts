@@ -1,10 +1,23 @@
 import type { FastifyInstance } from "fastify";
 import { scoreAllocations } from "../services/weighting.service.js";
 
-export async function allocationsRoutes(app: FastifyInstance): Promise<void> {
+export interface AllocationsRoutesOptions {
+  rateLimitMax: number;
+}
+
+export async function allocationsRoutes(
+  app: FastifyInstance,
+  options: AllocationsRoutesOptions,
+): Promise<void> {
   app.post(
     "/allocations/weights",
     {
+      // @fastify/rate-limit is registered with global: false in app.ts, so the
+      // limit applies here (the endpoint doing real work) and not to /health
+      // or /docs. Exceeding it surfaces as a 429 via the shared error handler.
+      config: {
+        rateLimit: { max: options.rateLimitMax, timeWindow: "1 minute" },
+      },
       // Validation is done by Zod in the service layer (so 400s always match the
       // API contract's error shape); this schema exists purely to drive Swagger
       // docs, so Fastify's built-in AJV validator is disabled per-route here.

@@ -140,6 +140,58 @@ describe("POST /api/allocations/weights", () => {
     expect(rows).toHaveLength(1);
   });
 
+  it("returns 409 (and persists nothing) when an Idempotency-Key is reused with a DIFFERENT payload", async () => {
+    const targetId = `${TEST_PREFIX}idem_conflict`;
+    const idempotencyKey = `${TEST_PREFIX}key-conflict-${Date.now()}-${Math.random()}`;
+
+    const first = await post([{ userId: `${TEST_PREFIX}user_c1`, targetId, amount: 100 }], {
+      "Idempotency-Key": idempotencyKey,
+    });
+    const second = await post([{ userId: `${TEST_PREFIX}user_c2`, targetId, amount: 999 }], {
+      "Idempotency-Key": idempotencyKey,
+    });
+
+    expect(first.status).toBe(200);
+    // Before bodyHash existed this silently returned 200 and discarded the second
+    // payload — a client bug (key reuse) lost data with a success status.
+    expect(second.status).toBe(409);
+    expect(((await second.json()) as { error: string }).error).toBe("IdempotencyConflict");
+
+    const rows = await prisma.allocation.findMany({ where: { targetId } });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.userId).toBe(`${TEST_PREFIX}user_c1`);
+  });
+
+  it("rejects an amount with more than 2 decimal places (storage is Decimal(18,2)) with a 400", async () => {
+    const response = await post([{ userId: "user_1", targetId: "A", amount: 0.005 }]);
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { error: string; details: unknown[] };
+    expect(body.error).toBe("ValidationError");
+    expect(body.details).toEqual([{ index: 0, field: "amount", value: 0.005 }]);
+  });
+
+  it("accepts a 2-decimal amount at the top of the allowed range (round-trip precision check)", async () => {
+    const targetId = `${TEST_PREFIX}precision`;
+    const response = await post([{ userId: `${TEST_PREFIX}user_p`, targetId, amount: 999_999_999_999.99 }]);
+    expect(response.status).toBe(200);
+  });
+
+  it("returns 429 once a client exhausts the rate limit, without touching the database", async () => {
+    // Unique forwarded-for key so this test can't exhaust the shared "unknown"
+    // bucket the rest of the suite implicitly uses. Invalid-JSON requests are
+    // used because the limiter runs before parsing — each costs no DB round trip.
+    const headers = { "x-forwarded-for": `${TEST_PREFIX}rate-${Date.now()}-${Math.random()}` };
+    const badJson = () =>
+      POST(new Request("http://test.local/api/allocations/weights", { method: "POST", headers, body: "not json" }));
+
+    for (let i = 0; i < 100; i++) {
+      expect((await badJson()).status).toBe(400);
+    }
+    const limited = await badJson();
+    expect(limited.status).toBe(429);
+    expect(((await limited.json()) as { error: string }).error).toBe("TooManyRequests");
+  });
+
   it("persists independently on repeat POSTs when no Idempotency-Key is given (prior behavior preserved)", async () => {
     const targetId = `${TEST_PREFIX}no_key`;
     const payload = [{ userId: `${TEST_PREFIX}user_no_key`, targetId, amount: 100 }];
@@ -168,21 +220,40 @@ describe("POST /api/allocations/weights", () => {
 });
 
 describe("GET /api/allocations/weights", () => {
-  it("returns the seeded demo scenario ranked descending by weight", async () => {
-    const response = await GET();
+  function get(): Promise<Response> {
+    return GET(new Request("http://test.local/api/allocations/weights"));
+  }
+
+  it("ranks a distributed target above a concentrated one of equal raw total, descending by weight", async () => {
+    // Inserts its own fixture rather than relying on the demo seed being present,
+    // so this test passes on a fresh database (e.g. in CI, where `db:seed` does
+    // not run before the test step).
+    const concentratedTarget = `${TEST_PREFIX}get_concentrated`;
+    const distributedTarget = `${TEST_PREFIX}get_distributed`;
+    await post([
+      { userId: `${TEST_PREFIX}get_whale`, targetId: concentratedTarget, amount: 1_000 },
+      ...Array.from({ length: 10 }, (_, i) => ({
+        userId: `${TEST_PREFIX}get_u${i}`,
+        targetId: distributedTarget,
+        amount: 100,
+      })),
+    ]);
+
+    const response = await get();
     expect(response.status).toBe(200);
     const body = (await response.json()) as Array<{ targetId: string; weight: number }>;
     const targetIds = body.map((r) => r.targetId);
-    // Both demo targets should be present, B (distributed) ranked above A (concentrated).
-    expect(targetIds.indexOf("B")).toBeGreaterThanOrEqual(0);
-    expect(targetIds.indexOf("A")).toBeGreaterThanOrEqual(0);
-    expect(targetIds.indexOf("B")).toBeLessThan(targetIds.indexOf("A"));
+    const distributedRank = targetIds.indexOf(distributedTarget);
+    const concentratedRank = targetIds.indexOf(concentratedTarget);
+    expect(distributedRank).toBeGreaterThanOrEqual(0);
+    expect(concentratedRank).toBeGreaterThanOrEqual(0);
+    expect(distributedRank).toBeLessThan(concentratedRank);
   });
 
   it("returns a structured 500 InternalError when the database read fails, not an unstructured framework error", async () => {
     const spy = vi.spyOn(prisma.allocation, "findMany").mockRejectedValueOnce(new Error("simulated database failure"));
 
-    const response = await GET();
+    const response = await get();
 
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({ error: "InternalError", message: "Something went wrong" });

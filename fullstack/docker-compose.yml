@@ -18,12 +18,30 @@ services:
       timeout: 5s
       retries: 10
 
+  # One-shot: applies prisma/migrations before the app starts. Without this, a
+  # fresh volume would boot the app against a database with no tables and every
+  # request would 500 until someone ran the migrations by hand. Uses the build
+  # stage (which still has the full node_modules with the prisma CLI) rather
+  # than the lean runtime image.
+  migrate:
+    build:
+      context: .
+      target: build
+    command: npx prisma migrate deploy
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://consensus:consensus@postgres:5432/consensus_weighting"
+
   app:
     build: .
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
       # Uses the in-network service name/port, not the host-mapped 5433.
       DATABASE_URL: "postgresql://consensus:consensus@postgres:5432/consensus_weighting"

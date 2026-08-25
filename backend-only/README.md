@@ -75,6 +75,13 @@ Expected response:
 ]
 ```
 
+Client mistakes always come back as 4xx in the contract's `{ error, message }` shape —
+malformed/empty JSON is `400 BadRequest`, validation failures are `400 ValidationError`
+with per-row details, and exceeding the rate limit is `429 TooManyRequests`. Only genuine
+server faults return `500 InternalError`. The rate limit (100 requests/minute per client
+IP) applies to the scoring endpoint only; `/health` and `/docs` are exempt so
+infrastructure probes and doc assets can't starve real traffic.
+
 `amount` accepts arbitrary non-negative finite numbers (not restricted to two decimal
 places) and is capped per-allocation at `MAX_AMOUNT` (`1e12`, see
 [`src/schemas/allocation.schema.ts`](src/schemas/allocation.schema.ts)); requests are

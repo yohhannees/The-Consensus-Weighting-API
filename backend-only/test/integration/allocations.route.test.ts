@@ -135,6 +135,45 @@ describe("POST /allocations/weights", () => {
     expect(response.json().error).toBe("ValidationError");
   });
 
+  it("rejects malformed JSON with a 400 BadRequest, not a 500 (edge case #13)", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/allocations/weights",
+      headers: { "content-type": "application/json" },
+      body: "not json",
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json().error).toBe("BadRequest");
+  });
+
+  it("rejects an empty body with a 400 BadRequest, not a 500", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/allocations/weights",
+      headers: { "content-type": "application/json" },
+      body: "",
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json().error).toBe("BadRequest");
+  });
+
+  it("rejects an unsupported content-type with a 4xx client error, not a 500", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/allocations/weights",
+      headers: { "content-type": "text/plain" },
+      body: "[]",
+    });
+
+    // How this surfaces (415 media-type error vs a 400 ValidationError for the
+    // unparsed body) is a framework detail; the contract point being pinned is
+    // that a client mistake is never masked as a server-side InternalError.
+    expect([400, 415]).toContain(response.statusCode);
+    expect(response.json().error).not.toBe("InternalError");
+  });
+
   it("returns all validation details for a request with multiple invalid rows, not just the first", async () => {
     const response = await app.inject({
       method: "POST",
@@ -151,6 +190,45 @@ describe("POST /allocations/weights", () => {
       { index: 0, field: "amount", value: -50 },
       { index: 1, field: "amount", value: "not-a-number" },
     ]);
+  });
+});
+
+describe("rate limiting", () => {
+  it("returns 429 TooManyRequests (not 500) once the scoring endpoint's limit is exhausted", async () => {
+    // Separate app instance with a tiny limit, so exhausting it is cheap and
+    // doesn't interfere with the shared instance used by the suite above.
+    const limitedApp = await buildApp({ rateLimitMax: 3 });
+    await limitedApp.ready();
+
+    try {
+      for (let i = 0; i < 3; i++) {
+        const ok = await limitedApp.inject({ method: "POST", url: "/allocations/weights", payload: [] });
+        expect(ok.statusCode).toBe(200);
+      }
+
+      const limited = await limitedApp.inject({ method: "POST", url: "/allocations/weights", payload: [] });
+      expect(limited.statusCode).toBe(429);
+      expect(limited.json().error).toBe("TooManyRequests");
+    } finally {
+      await limitedApp.close();
+    }
+  });
+
+  it("does not count /health against the scoring endpoint's budget", async () => {
+    const limitedApp = await buildApp({ rateLimitMax: 2 });
+    await limitedApp.ready();
+
+    try {
+      for (let i = 0; i < 10; i++) {
+        const health = await limitedApp.inject({ method: "GET", url: "/health" });
+        expect(health.statusCode).toBe(200);
+      }
+
+      const scoring = await limitedApp.inject({ method: "POST", url: "/allocations/weights", payload: [] });
+      expect(scoring.statusCode).toBe(200);
+    } finally {
+      await limitedApp.close();
+    }
   });
 });
 
