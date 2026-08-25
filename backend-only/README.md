@@ -9,6 +9,15 @@ Full design rationale (why this formula, the edge-case catalog, the API contract
 [../plan/02-algorithm-and-edge-cases.md](../plan/02-algorithm-and-edge-cases.md) if you want
 the math derivation.
 
+## Where to start
+
+1. Read [the repository README](../README.md) for the difference between the stateless backend and the persisted fullstack demo.
+2. Read [the plan index](../plan/README.md) for the formula, API contract, edge cases, and testing strategy.
+3. Follow [Run it](#run-it) and [Test it](#test-it) below.
+4. Read the [backend AI process log](../docs/AI_PROCESS_LOG_BACKEND.md) for the Plan Mode workflow, detailed prompts, model roles, corrections, and verification evidence.
+
+The process began in Plan Mode: the repository and specification were inspected, a written plan was created, the plan was reviewed and approved, and implementation started only after that approval.
+
 ## Run it
 
 ```bash
@@ -125,8 +134,13 @@ separate codebases.
 
 ## AI Process Log
 
-**Tools used:** Claude Code (Claude Sonnet 5, Anthropic), used for the entire build  -  design,
-implementation, and testing.
+**Tools used:** Fable for planning and product framing, Sol for test design and test writing,
+Claude Sonnet for primary implementation, Claude Opus for code review and difficult fixes,
+and Codex with ChatGPT 5.6 for repository review, documentation, and final integration.
+
+The complete backend workflow is documented in
+[AI_PROCESS_LOG_BACKEND.md](../docs/AI_PROCESS_LOG_BACKEND.md), including the math prompt,
+grouping prompt, API test prompt, Plan Mode approval gate, corrections, and verification.
 
 **Process:** The build started with a planning phase before any code: I asked the AI to work
 out the weighting math independently and write it down before touching a framework. The

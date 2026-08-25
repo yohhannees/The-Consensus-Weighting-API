@@ -6,6 +6,32 @@ implemented independently (no shared code  -  see
 [../plan/README.md](../plan/README.md#the-two-folder-decision)), plus a persisted dataset and
 a dashboard that makes the dampening effect visible at a glance.
 
+## Where to start
+
+If you are evaluating or onboarding to this project, use this order:
+
+1. Read [the root README](../README.md) for the repository map and the distinction between the two implementations.
+2. Read [the plan index](../plan/README.md) for the problem, formula, edge cases, API contract, and build decisions.
+3. Follow [Run it](#run-it) below to start PostgreSQL, migrate, seed, and launch the dashboard.
+4. Read [the fullstack AI process log](../docs/AI_PROCESS_LOG_FULLSTACK.md) for the exact prompts, grouping reasoning, mistakes corrected, and verification evidence.
+5. Use [Test it](#test-it) before accepting a change. The destructive seed and browser test require a local database.
+
+This folder is the persisted dashboard demo. The independent stateless API submission is in [`../backend-only/`](../backend-only/).
+
+## Quick start
+
+```bash
+npm install
+docker compose up -d postgres
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). The seed creates the comparison used in the challenge: one user contributes $10,000 to Target A, while 100 users contribute $100 each to Target B. Both targets receive the same raw capital, while Target B receives the higher consensus weight.
+
+For the complete explanation of the AI-assisted implementation process, see [AI process log: fullstack implementation](../docs/AI_PROCESS_LOG_FULLSTACK.md).
+
 > **Not behaviorally identical to `backend-only/`'s API contract.** `POST
 > /api/allocations/weights` here *persists* the submitted allocations and returns weights
 > computed over the entire accumulated database  -  so two identical requests do not return the
@@ -234,7 +260,16 @@ every animation on the page is disabled under `prefers-reduced-motion`.
 
 ## AI Process Log
 
-**Tools used:** Claude Code (Claude Sonnet 5, Anthropic).
+**Tools used:** Fable for planning and visual direction, Sol for test design and test writing,
+Claude Sonnet and Claude Opus for implementation and code review, and Codex with ChatGPT 5.6
+for repository review, documentation, deployment review, and final integration.
+
+The complete multi-model workflow is documented in
+[AI_PROCESS_LOG_FULLSTACK.md](../docs/AI_PROCESS_LOG_FULLSTACK.md), including the handoffs,
+math prompt, grouping prompt, mistakes corrected, and verification evidence.
+
+The workflow began in Plan Mode: the repository was inspected, a written plan was created,
+the plan was reviewed and approved, and only then was implementation started.
 
 **Process:** This implementation reused the algorithm design from the planning phase (see
 `backend-only/README.md`'s process log for how the formula itself was derived) but was built
