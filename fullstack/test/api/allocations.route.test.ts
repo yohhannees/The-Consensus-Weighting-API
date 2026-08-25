@@ -1,6 +1,7 @@
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { GET, POST } from "../../app/api/allocations/weights/route";
 import { prisma } from "../../lib/prisma";
+import { MAX_ALLOCATIONS, MAX_AMOUNT } from "../../lib/validation";
 
 // Uses a dedicated, disposable target/user prefix so these tests never touch
 // the demo seed data (Target A / Target B) that the dashboard displays.
@@ -11,6 +12,13 @@ function post(payload: unknown): Promise<Response> {
 }
 
 describe("POST /api/allocations/weights", () => {
+  // Opens the pool connection outside any timed test, so a slow first
+  // connection (cold start against a remote/pooled Postgres) can't eat into
+  // the first real test's timeout budget and read as a false failure there.
+  beforeAll(async () => {
+    await prisma.$queryRaw`SELECT 1`;
+  }, 20_000);
+
   afterAll(async () => {
     await prisma.allocation.deleteMany({ where: { targetId: { startsWith: TEST_PREFIX } } });
   });
@@ -71,6 +79,48 @@ describe("POST /api/allocations/weights", () => {
     expect(response.status).toBe(200);
     expect(Array.isArray(await response.json())).toBe(true);
   });
+
+  it("trims whitespace around targetId, merging it with an untrimmed duplicate", async () => {
+    const targetId = `${TEST_PREFIX}trim`;
+    const response = await post([
+      { userId: `${TEST_PREFIX}user_a`, targetId, amount: 50 },
+      { userId: `${TEST_PREFIX}user_b`, targetId: ` ${targetId} `, amount: 50 },
+    ]);
+
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as Array<{ targetId: string; rawTotal: number; uniqueUserCount: number }>;
+    const row = body.find((r) => r.targetId === targetId)!;
+    expect(row.rawTotal).toBe(100);
+    expect(row.uniqueUserCount).toBe(2);
+  });
+
+  it("rejects an amount above the maximum with a 400", async () => {
+    const response = await post([{ userId: "user_1", targetId: "A", amount: MAX_AMOUNT + 1 }]);
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { error: string }).error).toBe("ValidationError");
+  });
+
+  it("rejects a request with more allocations than the maximum with a 400", async () => {
+    const response = await post(
+      Array.from({ length: MAX_ALLOCATIONS + 1 }, (_, i) => ({ userId: `user_${i}`, targetId: "A", amount: 1 })),
+    );
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { error: string }).error).toBe("ValidationError");
+  });
+
+  it("returns all validation details for a request with multiple invalid rows, not just the first", async () => {
+    const response = await post([
+      { userId: "user_1", targetId: "A", amount: -50 },
+      { userId: "user_2", targetId: "B", amount: "not-a-number" },
+    ]);
+
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { details: unknown[] };
+    expect(body.details).toEqual([
+      { index: 0, field: "amount", value: -50 },
+      { index: 1, field: "amount", value: "not-a-number" },
+    ]);
+  });
 });
 
 describe("GET /api/allocations/weights", () => {
@@ -84,4 +134,12 @@ describe("GET /api/allocations/weights", () => {
     expect(targetIds.indexOf("A")).toBeGreaterThanOrEqual(0);
     expect(targetIds.indexOf("B")).toBeLessThan(targetIds.indexOf("A"));
   });
+});
+
+// File-scoped, not describe-scoped: both suites above share this one Prisma client
+// (see lib/prisma.ts's global singleton), so the pool must only close once everything
+// in this file is done with it — closing it inside either suite's own afterAll would
+// break whichever suite runs after.
+afterAll(async () => {
+  await prisma.$disconnect();
 });

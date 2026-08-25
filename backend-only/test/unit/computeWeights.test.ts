@@ -109,4 +109,20 @@ describe("edge cases", () => {
     expect(Number.isInteger(result!.weight * 100)).toBe(true);
     expect(Number.isInteger(result!.rawTotal * 100)).toBe(true);
   });
+
+  it("rounds a sum of classic floating-point-imprecise decimals (0.1 + 0.2) to 0.3, not 0.30000000000000004", () => {
+    const [result] = computeWeights([
+      { userId: "user_1", targetId: "A", amount: 0.1 },
+      { userId: "user_2", targetId: "A", amount: 0.2 },
+    ]);
+    expect(result?.rawTotal).toBe(0.3);
+  });
+
+  it("breaks a weight tie deterministically by targetId ascending, not insertion order", () => {
+    const results = computeWeights([
+      { userId: "user_1", targetId: "Z", amount: 100 },
+      { userId: "user_2", targetId: "A", amount: 100 },
+    ]);
+    expect(results.map((r) => r.targetId)).toEqual(["A", "Z"]);
+  });
 });

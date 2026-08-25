@@ -1,9 +1,18 @@
 # Consensus Weighting API — Fullstack
 
-Next.js (App Router) + Prisma + PostgreSQL. Same weighting formula and API contract as
-[`../backend-only/`](../backend-only/), implemented independently (no shared code — see
+Next.js (App Router) + Prisma + PostgreSQL. Same weighting formula as
+[`../backend-only/`](../backend-only/) (the official take-home submission — see its README),
+implemented independently (no shared code — see
 [../plan/README.md](../plan/README.md#the-two-folder-decision)), plus a persisted dataset and
 a dashboard that makes the dampening effect visible at a glance.
+
+> **Not behaviorally identical to `backend-only/`'s API contract.** `POST
+> /api/allocations/weights` here *persists* the submitted allocations and returns weights
+> computed over the entire accumulated database — so two identical requests do not return the
+> same result, unlike the stateless challenge contract. This is an optional, persisted demo
+> variant, not a drop-in replacement for the official submission. See
+> [../docs/AI_STATIC_CODE_AND_LOGIC_CHECK.md](../docs/AI_STATIC_CODE_AND_LOGIC_CHECK.md#full-stack-api-semantics-differ-from-the-challenge)
+> for the full reasoning.
 
 Full design rationale lives in [../plan/](../plan/) —
 [../plan/02-algorithm-and-edge-cases.md](../plan/02-algorithm-and-edge-cases.md) has the math,
@@ -72,6 +81,7 @@ own copy lives in [`domain/computeWeights.ts`](domain/computeWeights.ts).
 app/
   page.tsx                       dashboard — Server Component, queries Prisma directly
   api/allocations/weights/route.ts   the REST endpoint: GET (read) + POST (persist + read)
+  api/health/route.ts               liveness + DB-reachability check (mirrors backend-only's /health)
 domain/
   computeWeights.ts               the pure algorithm — own copy, no dependency on backend-only/
 components/
@@ -82,9 +92,20 @@ lib/
   prisma.ts                         Prisma Client, wired with the pg driver adapter (Prisma 7)
   getTargetWeights.ts                shared DB-read + compute, used by both the page and the route
   validation.ts / errors.ts          Zod schema + the API contract's error shape
+  rateLimit.ts                       in-memory per-process limiter (100 req/min) on the POST route
 prisma/
   schema.prisma, seed.ts             1 Allocation model; seed script loads the demo scenario
 ```
+
+`amount` is capped per-allocation at `MAX_AMOUNT` (`1e12`) and requests at `MAX_ALLOCATIONS`
+(`10,000`) rows — see [`lib/validation.ts`](lib/validation.ts) — so a request can't push the
+aggregate sum toward floating-point precision loss or force an unbounded batch insert.
+
+`POST` is rate-limited to 100 requests/minute per client IP via
+[`lib/rateLimit.ts`](lib/rateLimit.ts). The limiter's state is in-memory and per-process — the
+same tradeoff as `backend-only/`'s default `@fastify/rate-limit` store — so it resets on
+restart and isn't shared across horizontally-scaled instances; a production multi-instance
+deployment would need a shared store (e.g. Redis) instead.
 
 Weights are **derived, computed on every read** from persisted allocations — never cached or
 stored — so the dashboard can never show a stale number after a new submission. See

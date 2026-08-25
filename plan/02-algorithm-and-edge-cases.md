@@ -89,18 +89,19 @@ consensus actually is.
 | 6 | `userId` or `targetId` missing/empty/non-string | Reject with `400` | Both are required grouping keys; the response shape is meaningless without them. |
 | 7 | Empty array `[]` as input | Accept, return `200` with `[]` | Not an error — "no allocations" is a valid (if boring) state, not malformed input. |
 | 8 | Duplicate `userId` differing only by case or surrounding whitespace (`" user_1"` vs `"user_1"`) | Trim whitespace; do **not** case-fold | Whitespace differences are almost certainly transport/formatting noise. Case is left untouched deliberately — IDs are opaque identifiers (often UUIDs or case-sensitive external IDs), and silently merging `User_1`/`user_1` risks merging two genuinely different accounts. Documented as an explicit assumption, not a silent guess. |
-| 9 | Very large `amount` (e.g. `1e15`) | Allowed; JS/TS `number` (IEEE-754 double) has exact integer precision to 2^53 (~9 × 10^15) and `sqrt`/squaring stay well within safe float range for any realistic allocation size | No special-casing needed at challenge scale; documented as a known limit rather than silently wrong. |
+| 9 | Very large `amount` | Capped per allocation at `MAX_AMOUNT` (`1e12`); rejected with `400` above that | An individual amount passing `Number.isFinite` doesn't guarantee the *aggregate* sum across many allocations stays finite/precise — capping the individual amount bounds the worst case well inside IEEE-754's exact-integer range (2^53 ≈ 9×10^15), even for a full-size (`MAX_ALLOCATIONS`) request. |
 | 10 | Floating-point rounding noise in output (e.g. `9999.999999999998`) | Round `weight` and `rawTotal` to 2 decimal places in the response | Matches the example response shape (`"weight": 123.45`) and avoids leaking float artifacts to API consumers. |
 | 11 | Single target with a single $0 total after dropping zero allocations (case 3) | Target is simply omitted from the output — a target only appears if it received at least one valid, positive allocation | Consistent with "weight represents support received"; a target nobody funded isn't a result. |
 | 12 | **Sybil attack**: one actor splits $10,000 across 100 fabricated `userId`s to farm the same 100× multiplier as 100 real people | **Explicitly out of scope for correctness, called out as a known limitation** | This is the QF mechanism's well-documented real-world weakness — it assumes `userId` ⇔ one real independent person. Solving it requires identity/proof-of-personhood infrastructure (KYC, social-graph analysis, stake-based Sybil resistance) that is outside a take-home API's scope. The plan is to *state this limitation explicitly* in the README rather than pretend the formula is Sybil-proof — that's the more defensible engineering position than silently ignoring it or over-building an identity system nobody asked for. |
 | 13 | Payload is not an array / not valid JSON | Reject with `400` before any processing | Standard input-boundary validation. |
-| 14 | Extremely large payload (e.g. 1M allocations) | Grouping is done with hash maps (`Map<targetId, Map<userId, total>>`) — O(n) time, O(unique targets × unique users) space | No pathological algorithmic complexity; noted for the fullstack version where allocations are persisted, this also informs the DB schema (see [05-architecture-fullstack.md](05-architecture-fullstack.md)). |
+| 14 | Extremely large payload (e.g. 1M allocations) | Grouping is done with hash maps (`Map<targetId, Map<userId, total>>`) — O(n) time, O(unique targets × unique users) space; request length is additionally capped at `MAX_ALLOCATIONS` (`10,000`), rejected with `400` above that | The hash-map grouping has no pathological algorithmic complexity, but that alone doesn't bound *memory* for an arbitrarily large request body — the explicit cap does. Noted for the fullstack version where allocations are persisted, this also bounds the size of a single batch insert (see [05-architecture-fullstack.md](05-architecture-fullstack.md)). |
+| 15 | Two targets tie exactly on `weight` | Secondary sort key: `targetId` ascending | Without an explicit tiebreak, ordering among tied targets would depend on `Array.sort`'s stability over Map iteration (insertion) order — an implementation detail, not a documented guarantee. A deterministic secondary key keeps the response order reproducible for identical input. |
 
 ## 5. Pseudocode (language-agnostic, both implementations follow this exactly)
 
 ```
 function computeWeights(allocations):
-    validate(allocations)                         # cases 4,5,6,13 above
+    validate(allocations)                         # cases 4,5,6,9,13,14 above
 
     perTargetUserTotals = Map<targetId, Map<userId, number>>
 
@@ -118,4 +119,5 @@ function computeWeights(allocations):
         weight = round(S * S, 2)
         results.push({ targetId, rawTotal: round(rawTotal, 2), uniqueUserCount, weight })
 
+    sort results by weight descending, then targetId ascending   # case 15
     return results

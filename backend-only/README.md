@@ -31,6 +31,12 @@ Or containerized:
 docker compose up --build
 ```
 
+> **Fixed:** the Dockerfile previously only copied `tsconfig.json` into the build stage, but
+> `npm run build` compiles against `tsconfig.build.json` — so the containerized build failed
+> with `error TS5058: The specified path does not exist: 'tsconfig.build.json'`. Fixed by
+> copying both config files (`COPY tsconfig.json tsconfig.build.json ./`); verified by
+> rebuilding the image and curling the running container's endpoint.
+
 ## Test it
 
 ```bash
@@ -59,6 +65,22 @@ curl -X POST http://localhost:3000/allocations/weights \
     {"userId":"user_3","targetId":"B","amount":100}
   ]'
 ```
+
+Expected response:
+
+```json
+[
+  { "targetId": "A", "rawTotal": 10000, "uniqueUserCount": 1, "weight": 10000 },
+  { "targetId": "B", "rawTotal": 200, "uniqueUserCount": 2, "weight": 400 }
+]
+```
+
+`amount` accepts arbitrary non-negative finite numbers (not restricted to two decimal
+places) and is capped per-allocation at `MAX_AMOUNT` (`1e12`, see
+[`src/schemas/allocation.schema.ts`](src/schemas/allocation.schema.ts)); requests are
+capped at `MAX_ALLOCATIONS` (`10,000`) rows. Both bounds exist so a request can't force an
+aggregate sum toward IEEE-754 precision loss / `Infinity`, or force unbounded server-side
+memory use — see [../docs/AI_STATIC_CODE_AND_LOGIC_CHECK.md](../docs/AI_STATIC_CODE_AND_LOGIC_CHECK.md#numeric-overflow-risk).
 
 ## The algorithm, briefly
 

@@ -46,6 +46,8 @@ export function computeWeights(allocations: Allocation[]): TargetWeight[] {
     });
   }
 
-  results.sort((a, b) => b.weight - a.weight);
+  // Secondary key (targetId ascending) makes the ordering deterministic when two
+  // targets tie on weight, instead of leaving it to sort stability over insertion order.
+  results.sort((a, b) => b.weight - a.weight || a.targetId.localeCompare(b.targetId));
   return results;
 }

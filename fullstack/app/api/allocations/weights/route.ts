@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { allocationsRequestSchema } from "@/lib/validation";
 import { ValidationError, validationErrorFromZod } from "@/lib/errors";
 import { getTargetWeights } from "@/lib/getTargetWeights";
+import { clientKeyFromRequest, isRateLimited } from "@/lib/rateLimit";
 
 function validationErrorResponse(error: ValidationError): Response {
   return Response.json(
@@ -17,6 +18,10 @@ export async function GET(): Promise<Response> {
 
 /** Persists the submitted allocations, then returns weights for the full accumulated dataset. */
 export async function POST(request: Request): Promise<Response> {
+  if (isRateLimited(clientKeyFromRequest(request))) {
+    return Response.json({ error: "TooManyRequests", message: "Rate limit exceeded" }, { status: 429 });
+  }
+
   let rawBody: unknown;
   try {
     rawBody = await request.json();

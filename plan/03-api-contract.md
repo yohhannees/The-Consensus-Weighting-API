@@ -28,7 +28,11 @@ built.)
 |---|---|---|
 | `userId` | `string` | required, non-empty after trim |
 | `targetId` | `string` | required, non-empty after trim |
-| `amount` | `number` | required, finite, `>= 0` |
+| `amount` | `number` | required, finite, `>= 0`, `<= MAX_AMOUNT` (`1e12`) |
+
+The request array itself is capped at `MAX_ALLOCATIONS` (`10,000`) rows. Both bounds exist so
+a request can't push the aggregate sum toward IEEE-754 precision loss / `Infinity`, or force
+unbounded server-side memory use (edge cases #9, #14).
 
 ### Success response — `200 OK`
 
@@ -57,9 +61,9 @@ built.)
 ```
 
 Returned for: non-array body, missing/empty `userId`/`targetId`, non-numeric/negative/
-infinite `amount` (edge cases #4, #5, #6, #13). The whole request is rejected atomically —
-no partial processing of a batch with one bad row, so a caller can't end up with a silently
-incomplete result.
+infinite/over-the-cap `amount`, or a request array longer than `MAX_ALLOCATIONS` (edge cases
+#4, #5, #6, #9, #13, #14). The whole request is rejected atomically — no partial processing of
+a batch with one bad row, so a caller can't end up with a silently incomplete result.
 
 ### Error response — `500 Internal Server Error`
 
